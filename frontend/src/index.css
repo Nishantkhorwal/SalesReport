@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+:root {
+  /* Coral colors */
+  --coral-50: #fef7f0;
+  --coral-100: #feecdc;
+  --coral-200: #fcd9bd;
+  --coral-300: #fdba8c;
+  --coral-500: #f56500;
+  --coral-600: #ea580c;
+  --coral-700: #c2410c;
+  --coral-800: #9a3412;
+
+  /* Mint colors */
+  --mint-50: #f0fdf9;
+  --mint-100: #ccfbef;
+  --mint-200: #99f6e0;
+  --mint-300: #5eead4;
+  --mint-500: #14b8a6;
+  --mint-700: #0f766e;
+  --mint-800: #115e59;
+
+  /* Lavender colors */
+  --lavender-50: #faf5ff;
+  --lavender-100: #f3e8ff;
+  --lavender-200: #e9d5ff;
+  --lavender-300: #d8b4fe;
+  --lavender-400: #c084fc;
+  --lavender-600: #9333ea;
+  --lavender-900: #581c87;
+}

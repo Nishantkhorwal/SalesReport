@@ -1,0 +1,60 @@
+/* Custom color definitions for the colorful dashboard */
+
+
+/* Apply custom colors using CSS custom properties */
+.bg-coral-50 {
+  background-color: var(--coral-50);
+}
+.bg-coral-100 {
+  background-color: var(--coral-100);
+}
+.text-coral-700 {
+  color: var(--coral-700);
+}
+.text-coral-800 {
+  color: var(--coral-800);
+}
+.border-coral-200 {
+  border-color: var(--coral-200);
+}
+.border-coral-300 {
+  border-color: var(--coral-300);
+}
+
+.bg-mint-50 {
+  background-color: var(--mint-50);
+}
+.bg-mint-100 {
+  background-color: var(--mint-100);
+}
+.text-mint-500 {
+  color: var(--mint-500);
+}
+.text-mint-700 {
+  color: var(--mint-700);
+}
+.text-mint-800 {
+  color: var(--mint-800);
+}
+.border-mint-200 {
+  border-color: var(--mint-200);
+}
+
+.bg-lavender-50 {
+  background-color: var(--lavender-50);
+}
+.text-lavender-400 {
+  color: var(--lavender-400);
+}
+.text-lavender-600 {
+  color: var(--lavender-600);
+}
+.text-lavender-900 {
+  color: var(--lavender-900);
+}
+.border-lavender-200 {
+  border-color: var(--lavender-200);
+}
+.border-lavender-300 {
+  border-color: var(--lavender-300);
+}
