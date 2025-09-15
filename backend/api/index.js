@@ -25,7 +25,7 @@ const server = createServer(app);
 
 // CORS Configuration (Must be on Top)
 const allowedOrigins = [
-  "https://crm.pravasa.org.in",
+  "https://sales.rofconnect.com",
   "http://localhost:5173",
   "http://localhost:5174",
   
