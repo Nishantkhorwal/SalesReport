@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
-import { PieChart, Home, NotebookPen ,LogOut, BadgeIndianRupee, Settings, UserPlus, FileBarChart,  Send, Edit } from "lucide-react"
+import { PieChart, Home, NotebookPen ,LogOut, BadgeIndianRupee, Settings, UserPlus, FileBarChart,  Send, Edit, User } from "lucide-react"
 
 
 
@@ -128,6 +128,14 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                 </Link>
               </li>
             )}
+            <li>
+                <Link to="/profile">
+                  <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-100 hover:text-gray-900 hover:bg-gray-100">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </button>
+                </Link>
+              </li>
             <li className=''>
               
               <button onClick={handleLogout} className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-100 hover:text-gray-900 hover:bg-gray-100">

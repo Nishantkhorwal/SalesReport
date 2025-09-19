@@ -266,6 +266,44 @@ export const getCurrentUser = async (req, res) => {
   }
 };
 
+export const updateOwnProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // from middleware
+    const { name, email, password } = req.body;
+
+    const updateData = {};
+
+    if (name) updateData.name = name;
+    if (email) {
+      const existingUser = await SalesReportUser.findOne({ email, _id: { $ne: userId } });
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      updateData.email = email;
+    }
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await SalesReportUser.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 
 export const updateUser = async (req, res) => {
   try {
@@ -377,4 +415,10 @@ export const updateUser = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
 

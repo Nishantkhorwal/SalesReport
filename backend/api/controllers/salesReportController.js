@@ -3,6 +3,7 @@ import SalesReportUser from '../models/userModel.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import ExcelJS from "exceljs";
 
 
 
@@ -510,6 +511,111 @@ export const getSalesReportById = async (req, res) => {
       message: 'Failed to fetch sales report',
       error: err.message
     });
+  }
+};
+
+
+
+
+
+export const exportSalesReportsToExcel = async (req, res) => {
+  try {
+    const { type, date } = req.query; 
+    // type can be "day" | "week" | "month"
+    // date is the reference date from frontend (YYYY-MM-DD)
+
+    if (!type || !date) {
+      return res.status(400).json({ message: "type and date are required" });
+    }
+
+    const refDate = new Date(date);
+    let startDate, endDate;
+
+    if (type === "day") {
+      startDate = new Date(refDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(refDate);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (type === "week") {
+      const day = refDate.getDay(); // 0=Sunday
+      startDate = new Date(refDate);
+      startDate.setDate(refDate.getDate() - day); 
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (type === "month") {
+      startDate = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      return res.status(400).json({ message: "Invalid type. Must be day, week, or month" });
+    }
+
+    // Fetch reports in range
+    const reports = await CrmSalesReport.find({
+      date: { $gte: startDate, $lte: endDate }
+    }).populate("user", "name email");
+
+    // Create workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sales Reports");
+
+    // Define columns
+    worksheet.columns = [
+      { header: "Report Date", key: "date", width: 15 },
+      { header: "User Name", key: "userName", width: 20 },
+      { header: "User Email", key: "userEmail", width: 25 },
+      { header: "Firm Name", key: "firmName", width: 20 },
+      { header: "Owner Name", key: "ownerName", width: 20 },
+      { header: "Phone Number", key: "phoneNumber", width: 15 },
+      { header: "Email", key: "email", width: 20 },
+      { header: "Team Size", key: "teamSize", width: 10 },
+      { header: "RERA", key: "rera", width: 15 },
+      { header: "Remark", key: "remark", width: 30 },
+      { header: "Status", key: "status", width: 15 },
+      { header: "Follow Ups", key: "followUps", width: 40 }
+    ];
+
+    // Add rows
+    reports.forEach(report => {
+      report.meetings.forEach(meeting => {
+        worksheet.addRow({
+          date: report.date.toISOString().split("T")[0],
+          userName: report.user?.name || "N/A",
+          userEmail: report.user?.email || "N/A",
+          firmName: meeting.firmName,
+          ownerName: meeting.ownerName,
+          phoneNumber: meeting.phoneNumber,
+          email: meeting.email,
+          teamSize: meeting.teamSize,
+          rera: meeting.rera,
+          remark: meeting.remark,
+          status: meeting.status,
+          followUps: (meeting.followUps || [])
+            .map(f => `${f.date.toISOString().split("T")[0]} - ${f.remark}`)
+            .join("\n")
+        });
+      });
+    });
+
+    // Set response headers for file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=sales_reports_${type}_${date}.xlsx`
+    );
+
+    // Send Excel file
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("Error exporting reports to Excel:", err);
+    res.status(500).json({ message: "Failed to export reports", error: err.message });
   }
 };
 

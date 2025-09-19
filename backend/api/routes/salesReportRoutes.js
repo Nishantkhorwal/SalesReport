@@ -1,5 +1,5 @@
 import express from 'express';
-import { addFollowUpToMeeting, createSalesReport, deleteSalesReport, editSalesReport, getAllFollowUps, getSalesReportById, getSalesReports, getTodaysFollowUps } from '../controllers/salesReportController.js';
+import { addFollowUpToMeeting, createSalesReport, deleteSalesReport, editSalesReport, exportSalesReportsToExcel, getAllFollowUps, getSalesReportById, getSalesReports, getTodaysFollowUps } from '../controllers/salesReportController.js';
 import upload from '../multerConfig.js';
 import { authenticateUser } from '../middleware/auth.js';
 
@@ -11,6 +11,7 @@ router.post(
   upload.single('visitingCard'), // Only ONE file allowed
   createSalesReport
 );
+router.get("/export", authenticateUser, exportSalesReportsToExcel);
 
 router.get('/followups', authenticateUser, getAllFollowUps);
 

@@ -12,6 +12,7 @@ import AdminRoute from './components/AdminRoute';
 import SalesReportForm from './pages/SalesReportForm';
 import SalesReports from './pages/SalesReports';
 import EditUsers from './pages/EditUsers';
+import ProfilePage from './pages/Profile';
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <LoginPage />
           }
         />
+        
         {/* Protected Layout with Sidebar */}
 
           <Route element={<PrivateRoute />}>
@@ -32,6 +34,9 @@ function App() {
             </DashboardLayout>} /> */}
             <Route path="/createreport" element={<DashboardLayout>
               <SalesReportForm />
+            </DashboardLayout>} />
+            <Route path="/profile" element={<DashboardLayout>
+              <ProfilePage />
             </DashboardLayout>} />
             <Route path="/" element={<DashboardLayout>
               <SalesReports />
@@ -56,6 +61,9 @@ function App() {
             </DashboardLayout>} />
              <Route path="/register" element={<DashboardLayout>
               <Register />
+            </DashboardLayout>} />
+            <Route path="/profile" element={<DashboardLayout>
+              <ProfilePage />
             </DashboardLayout>} />
         </Route>
 

@@ -6,6 +6,8 @@ import "../App.css"
 const SalesReports = () => {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportType, setExportType] = useState("day")
   const [error, setError] = useState(null)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -527,6 +529,16 @@ const SalesReports = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              {currentUser.role === "admin" && 
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Export Reports
+              </button>
+              } 
+              
+
               {/* Notification Bell */}
               <div className="relative">
                 <button
@@ -568,6 +580,76 @@ const SalesReports = () => {
           </div>
         </div>
       </div>
+
+      {showExportModal && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 className="text-xl font-bold mb-4">Export Sales Reports</h2>
+      <p className="text-gray-600 mb-4">Choose how you want to export reports:</p>
+
+      <div className="space-y-2">
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            value="day"
+            checked={exportType === "day"}
+            onChange={(e) => setExportType(e.target.value)}
+          />
+          <span>Today’s Date</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            value="week"
+            checked={exportType === "week"}
+            onChange={(e) => setExportType(e.target.value)}
+          />
+          <span>Week Wise</span>
+        </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            value="month"
+            checked={exportType === "month"}
+            onChange={(e) => setExportType(e.target.value)}
+          />
+          <span>Month Wise</span>
+        </label>
+      </div>
+
+      <div className="flex justify-end space-x-3 mt-6">
+        <button
+          onClick={() => setShowExportModal(false)}
+          className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={async () => {
+            const today = new Date().toISOString().split("T")[0];
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+              `${API_BASE_URL}/api/report/export?type=${exportType}&date=${today}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `sales_report_${exportType}_${today}.xlsx`;
+            a.click();
+            a.remove();
+            setShowExportModal(false);
+          }}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+        >
+          Download
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {showNotificationModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
