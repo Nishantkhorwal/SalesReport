@@ -141,6 +141,7 @@ const SalesReportForm = () => {
                         onChange={handleFileChange}
                         className="hidden"
                         id="visitingCard"
+                        required
                       />
                       <label
                         htmlFor="visitingCard"
@@ -155,11 +156,13 @@ const SalesReportForm = () => {
                     <div className="relative flex-1">
                       <input
                         type="file"
+                        
                         accept="image/*"
                         capture="environment"
                         onChange={handleFileChange}
                         className="hidden"
                         id="cameraCapture"
+                        
                       />
                       <label
                         htmlFor="cameraCapture"
