@@ -40,8 +40,7 @@ const corsOptions = {
 // Apply CORS middleware globally
 app.use(cors(corsOptions));
 
-// Preflight requests
-app.options("*", cors(corsOptions)); 
+
 
 // Middleware
 // enable preflight for all routes
