@@ -52,7 +52,7 @@ app.use('/api/report', salesReportRoutes);
 
 
 // Start Server
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}!`);
 });
