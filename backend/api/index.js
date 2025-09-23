@@ -30,16 +30,7 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like Postman, curl)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true); // origin allowed
-    } else {
-      callback(new Error("CORS policy: Origin not allowed"), false);
-    }
-  },
+  origin: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,               // Allow cookies
   allowedHeaders: ["Content-Type", "Authorization"],
