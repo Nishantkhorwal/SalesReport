@@ -1214,43 +1214,49 @@ const SalesReports = () => {
 
       {/* Scrollable Section */}
       <div className="max-h-96 overflow-y-auto overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-          <thead className="bg-gradient-to-r from-coral-100 to-orange-100">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                User
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                Total Reports
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                Today
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {summaryData.map((user) => (
-              <tr
-                key={user._id}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-4 py-3 text-gray-800 font-medium">
-                  {user.name}
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  {user.totalReports}
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  {user.todayReports}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {summaryData.map((managerGroup) => (
+          <div key={managerGroup.manager.managerId || managerGroup.manager.name} className="mb-6">
+            {/* Manager Header */}
+            <div className="bg-orange-100 px-4 py-2 rounded-t-lg font-semibold text-gray-800">
+              Manager: {managerGroup.manager.name} ({managerGroup.manager.email || "N/A"})
+            </div>
+
+            <table className="min-w-full border border-gray-200 rounded-b-lg overflow-hidden shadow-sm">
+              <thead className="bg-gradient-to-r from-coral-100 to-orange-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    User
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Total Reports
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Today
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {managerGroup.users.map((user) => (
+                  <tr
+                    key={user.userId}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-gray-800 font-medium">
+                      {user.name}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{user.totalReports}</td>
+                    <td className="px-4 py-3 text-gray-700">{user.todayReports}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
       </div>
     </div>
   </div>
 )}
+
 
 
         {/* Empty State */}

@@ -771,44 +771,48 @@ export const getReportsSummary = async (req, res) => {
 
     // Total reports per user
     const totalReports = await CrmSalesReport.aggregate([
-      {
-        $group: {
-          _id: "$user",   // reports store user in "user" field
-          totalReports: { $sum: 1 }
-        }
-      }
+      { $group: { _id: "$user", totalReports: { $sum: 1 } } }
     ]);
 
     // Today's reports per user
     const todayReports = await CrmSalesReport.aggregate([
-      {
-        $match: {
-          date: { $gte: startOfDay, $lte: endOfDay }
-        }
-      },
-      {
-        $group: {
-          _id: "$user",
-          todayReports: { $sum: 1 }
-        }
-      }
+      { $match: { date: { $gte: startOfDay, $lte: endOfDay } } },
+      { $group: { _id: "$user", todayReports: { $sum: 1 } } }
     ]);
 
-    // Convert to maps
+    // Convert arrays to maps for quick lookup
     const totalMap = new Map(totalReports.map(r => [r._id.toString(), r.totalReports]));
     const todayMap = new Map(todayReports.map(r => [r._id.toString(), r.todayReports]));
 
-    // Get all users
-    const users = await SalesReportUser.find({}, "name email");
+    // Fetch all users (non-managers) with their managers populated
+    const users = await SalesReportUser.find({ role: "user" })
+      .select("name email managerId")
+      .populate({ path: "managerId", select: "name email" });
 
-    // Build final summary
-    const summary = users.map(user => ({
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      totalReports: totalMap.get(user._id.toString()) || 0,
-      todayReports: todayMap.get(user._id.toString()) || 0
-    }));
+    // Group users by manager
+    const managerMap = new Map();
+
+    users.forEach(user => {
+      const managerId = user.managerId ? user.managerId._id.toString() : "no-manager";
+      const managerData = user.managerId
+        ? { managerId: user.managerId._id, name: user.managerId.name, email: user.managerId.email }
+        : { managerId: null, name: "No Manager", email: null };
+
+      if (!managerMap.has(managerId)) {
+        managerMap.set(managerId, { manager: managerData, users: [] });
+      }
+
+      managerMap.get(managerId).users.push({
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        totalReports: totalMap.get(user._id.toString()) || 0,
+        todayReports: todayMap.get(user._id.toString()) || 0
+      });
+    });
+
+    // Convert map to array for response
+    const summary = Array.from(managerMap.values());
 
     res.json(summary);
 
@@ -817,6 +821,7 @@ export const getReportsSummary = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
