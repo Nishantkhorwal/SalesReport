@@ -76,8 +76,10 @@ const SalesReports = () => {
     const token = localStorage.getItem("token")
     const res = await fetch(`${API_BASE_URL}/api/report/today/${reportId}`, {
       headers: {
-        Authorization: `Bearer ${token}`,
-      },
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: true,
     })
     const data = await res.json()
     if (res.ok) {
@@ -99,8 +101,10 @@ const SalesReports = () => {
       const token = localStorage.getItem("token")
       const res = await fetch(`${API_BASE_URL}/api/report/followups`, {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
       })
       const data = await res.json()
       if (res.ok) {
@@ -119,8 +123,10 @@ const SalesReports = () => {
       const today = new Date().toISOString().split("T")[0]
       const res = await fetch(`${API_BASE_URL}/api/report/followups/today`, {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
       })
       const data = await res.json()
       if (res.ok) {
@@ -143,8 +149,10 @@ const SalesReports = () => {
         // Fetch current user
         const userRes = await fetch(`${API_BASE_URL}/api/auth/current-user`, {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: true,
         })
         const currentUser = await userRes.json()
         setCurrentUser(currentUser)
@@ -152,8 +160,10 @@ const SalesReports = () => {
         // Fetch available users based on role
         const usersRes = await fetch(`${API_BASE_URL}/api/auth/available-users`, {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: true,
         })
         const availableUsers = await usersRes.json()
         setAvailableUsers(availableUsers)
@@ -195,8 +205,10 @@ const SalesReports = () => {
 
       const res = await fetch(url, {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
       })
 
       if (!res.ok) {
@@ -349,8 +361,10 @@ const SalesReports = () => {
       const response = await fetch(`${API_BASE_URL}/api/report/${editingReport}`, {
         method: "PUT",
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
         body: formData,
       })
 
@@ -376,8 +390,10 @@ const SalesReports = () => {
       const response = await fetch(`${API_BASE_URL}/api/report/${reportId}`, {
         method: "DELETE",
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
       })
 
       if (!response.ok) {
@@ -405,6 +421,7 @@ const SalesReports = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
         body: JSON.stringify({
           meetingId: followUpMeetingId,
           date: followUpDate,
@@ -442,6 +459,7 @@ const SalesReports = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
         body: JSON.stringify(editFollowUpData),
       })
 
@@ -465,8 +483,10 @@ const SalesReports = () => {
       const res = await fetch(`${API_BASE_URL}/api/report/follow-up/${followUpId}`, {
         method: "DELETE",
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        credentials: true,
       })
 
       if (!res.ok) throw new Error("Failed to delete follow-up")
