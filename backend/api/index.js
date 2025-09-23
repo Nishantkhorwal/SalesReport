@@ -46,7 +46,7 @@ app.use(cors({
 }));
 
 // Middleware
-app.options('*', cors()); // enable preflight for all routes
+// enable preflight for all routes
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
