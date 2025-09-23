@@ -70,6 +70,116 @@ export const createSalesReport = async (req, res) => {
 };
 
 
+// export const getSalesReports = async (req, res) => {
+//   try {
+//     const { role, id } = req.user;
+//     const { 
+//       startDate, 
+//       endDate, 
+//       userId, 
+//       page = 1,    // Add page parameter with default value 1
+//       limit = 10    // Add limit parameter with default value 10
+//     } = req.query;
+
+//     const query = {};
+
+//     // Date filtering (unchanged)
+//     if (startDate || endDate) {
+//       query.date = {};
+//       if (startDate) query.date.$gte = new Date(startDate);
+//       if (endDate) {
+//         const end = new Date(endDate);
+//         end.setHours(23, 59, 59, 999);
+//         query.date.$lte = end;
+//       }
+//     }
+
+//     // User filtering logic - updated to handle specific user selection
+//     if (userId && userId !== 'all') {
+//       // If a specific user is selected, verify the requesting user has permission
+//       if (role === 'admin') {
+//         query.user = userId; // Admins can view any user's reports
+//       } else if (role === 'manager') {
+//         // Verify the requested user is under this manager
+//         const isTeamMember = await SalesReportUser.exists({ _id: userId, managerId: id });
+//         if (!isTeamMember) {
+//           return res.status(403).json({ message: 'You can only view your team members\' reports' });
+//         }
+//         query.user = userId;
+//       } else if (role === 'user') {
+//         // Regular users can only view their own reports
+//         if (userId !== id) {
+//           return res.status(403).json({ message: 'You can only view your own reports' });
+//         }
+//         query.user = id;
+//       }
+//     } else {
+//       // No specific user selected - apply role-based default filtering
+//       if (role === 'user') {
+//         query.user = id;
+//       } else if (role === 'manager') {
+//         const assignedUsers = await SalesReportUser.find({ managerId: id }, '_id');
+//         const userIds = assignedUsers.map(user => user._id);
+//         query.user = { $in: userIds };
+//       }
+//       // Admin sees all - no user filter needed
+//     }
+
+//     // Convert page and limit to numbers
+//     const pageNumber = parseInt(page);
+//     const limitNumber = parseInt(limit);
+//     const skip = (pageNumber - 1) * limitNumber;
+
+//     // Get total count of documents (for pagination info)
+//     const total = await CrmSalesReport.countDocuments(query);
+
+//     const reports = await CrmSalesReport.find(query)
+//       .populate({
+//         path: 'user',
+//         select: 'name email role managerId',
+//         populate: {
+//           path: 'managerId',
+//           select: '_id name'
+//         }
+//       })
+//       .sort({ date: -1 })
+//       .skip(skip)
+//       .limit(limitNumber);
+
+
+//     const firstDayOfMonth = new Date();
+//     firstDayOfMonth.setDate(1);
+//     firstDayOfMonth.setHours(0, 0, 0, 0);
+
+//     const lastDayOfMonth = new Date(firstDayOfMonth);
+//     lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
+//     lastDayOfMonth.setDate(0);
+//     lastDayOfMonth.setHours(23, 59, 59, 999);
+
+//     const currentMonthQuery = {
+//       ...query,
+//       date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+//     };
+
+//     const currentMonthCount = await CrmSalesReport.countDocuments(currentMonthQuery);  
+
+//     res.status(200).json({ 
+//       reports,
+//       pagination: {
+//         total,
+//         page: pageNumber,
+//         limit: limitNumber,
+//         totalPages: Math.ceil(total / limitNumber)
+//       },
+//       currentMonth: currentMonthCount
+//     });
+
+//   } catch (err) {
+//     console.error('Error fetching sales reports:', err);
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// };
+
 export const getSalesReports = async (req, res) => {
   try {
     const { role, id } = req.user;
@@ -77,13 +187,14 @@ export const getSalesReports = async (req, res) => {
       startDate, 
       endDate, 
       userId, 
-      page = 1,    // Add page parameter with default value 1
-      limit = 10    // Add limit parameter with default value 10
+      managerId,   // <-- new filter
+      page = 1,    
+      limit = 10   
     } = req.query;
 
     const query = {};
 
-    // Date filtering (unchanged)
+    // Date filtering
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
@@ -94,59 +205,74 @@ export const getSalesReports = async (req, res) => {
       }
     }
 
-    // User filtering logic - updated to handle specific user selection
-    if (userId && userId !== 'all') {
-      // If a specific user is selected, verify the requesting user has permission
-      if (role === 'admin') {
-        query.user = userId; // Admins can view any user's reports
-      } else if (role === 'manager') {
-        // Verify the requested user is under this manager
+    // Manager filter (new logic)
+    if (managerId && managerId !== "all") {
+      // Get all users under this manager
+      const teamMembers = await SalesReportUser.find({ managerId }, "_id");
+      const teamUserIds = teamMembers.map(u => u._id);
+
+      // If no team members found, return empty result
+      if (teamUserIds.length === 0) {
+        return res.status(200).json({
+          reports: [],
+          pagination: { total: 0, page: 1, limit: limit, totalPages: 0 },
+          currentMonth: 0
+        });
+      }
+
+      query.user = { $in: teamUserIds };
+    }
+
+    // User filter (same as before)
+    if (userId && userId !== "all") {
+      if (role === "admin") {
+        query.user = userId;
+      } else if (role === "manager") {
         const isTeamMember = await SalesReportUser.exists({ _id: userId, managerId: id });
         if (!isTeamMember) {
-          return res.status(403).json({ message: 'You can only view your team members\' reports' });
+          return res.status(403).json({ message: "You can only view your team members' reports" });
         }
         query.user = userId;
-      } else if (role === 'user') {
-        // Regular users can only view their own reports
+      } else if (role === "user") {
         if (userId !== id) {
-          return res.status(403).json({ message: 'You can only view your own reports' });
+          return res.status(403).json({ message: "You can only view your own reports" });
         }
         query.user = id;
       }
     } else {
-      // No specific user selected - apply role-based default filtering
-      if (role === 'user') {
+      // Role-based fallback
+      if (role === "user") {
         query.user = id;
-      } else if (role === 'manager') {
-        const assignedUsers = await SalesReportUser.find({ managerId: id }, '_id');
+      } else if (role === "manager" && !managerId) {
+        const assignedUsers = await SalesReportUser.find({ managerId: id }, "_id");
         const userIds = assignedUsers.map(user => user._id);
         query.user = { $in: userIds };
       }
-      // Admin sees all - no user filter needed
+      // Admin sees all
     }
 
-    // Convert page and limit to numbers
+    // Pagination
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
-    // Get total count of documents (for pagination info)
+    // Total count
     const total = await CrmSalesReport.countDocuments(query);
 
     const reports = await CrmSalesReport.find(query)
       .populate({
-        path: 'user',
-        select: 'name email role managerId',
+        path: "user",
+        select: "name email role managerId",
         populate: {
-          path: 'managerId',
-          select: '_id name'
+          path: "managerId",
+          select: "_id name"
         }
       })
       .sort({ date: -1 })
       .skip(skip)
       .limit(limitNumber);
 
-
+    // Current month count
     const firstDayOfMonth = new Date();
     firstDayOfMonth.setDate(1);
     firstDayOfMonth.setHours(0, 0, 0, 0);
@@ -161,9 +287,19 @@ export const getSalesReports = async (req, res) => {
       date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
     };
 
-    const currentMonthCount = await CrmSalesReport.countDocuments(currentMonthQuery);  
+    const currentMonthCount = await CrmSalesReport.countDocuments(currentMonthQuery);
+    const today = new Date()
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0))
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999))
 
-    res.status(200).json({ 
+    const todayQuery = {
+      ...query,
+      date: { $gte: startOfDay, $lte: endOfDay }
+    }
+
+    const todayCount = await CrmSalesReport.countDocuments(todayQuery)
+
+    res.status(200).json({
       reports,
       pagination: {
         total,
@@ -171,15 +307,15 @@ export const getSalesReports = async (req, res) => {
         limit: limitNumber,
         totalPages: Math.ceil(total / limitNumber)
       },
-      currentMonth: currentMonthCount
+      currentMonth: currentMonthCount,
+      today: todayCount,
     });
 
   } catch (err) {
-    console.error('Error fetching sales reports:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("Error fetching sales reports:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 
 export const editSalesReport = async (req, res) => {

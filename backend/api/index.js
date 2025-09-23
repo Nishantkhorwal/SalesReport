@@ -28,11 +28,17 @@ const allowedOrigins = [
   "https://sales.rofconnect.com",
   "http://localhost:5173",
   "http://localhost:5174",
-  
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // allow non-browser requests like Postman
+    if(allowedOrigins.indexOf(origin) === -1){
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -40,6 +46,7 @@ app.use(cors({
 }));
 
 // Middleware
+app.options('*', cors()); // enable preflight for all routes
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());

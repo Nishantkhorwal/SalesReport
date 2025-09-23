@@ -42,6 +42,11 @@ const SalesReports = () => {
   const [currentMonth,setCurrentMonth] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null)
   const [showReportModal, setShowReportModal] = useState(false)
+  const [selectedManager, setSelectedManager] = useState("all")
+  const [availableManagers, setAvailableManagers] = useState([])
+  const [todayReports, setTodayReports] = useState(0)
+
+
 
 
   const [pagination, setPagination] = useState({
@@ -152,6 +157,16 @@ const SalesReports = () => {
         })
         const availableUsers = await usersRes.json()
         setAvailableUsers(availableUsers)
+
+        // Fetch managers if current user is admin
+        if (currentUser.role === "admin") {
+          const managersRes = await fetch(`${API_BASE_URL}/api/auth/managers`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          const managers = await managersRes.json()
+          setAvailableManagers(managers)
+        }
+
       } catch (err) {
         console.error("Failed to fetch user data:", err)
         setError("Failed to load user information")
@@ -170,6 +185,8 @@ const SalesReports = () => {
       if (startDate) query.append("startDate", startDate)
       if (endDate) query.append("endDate", endDate)
       if (selectedUser !== "all") query.append("userId", selectedUser)
+      if (selectedManager !== "all") query.append("managerId", selectedManager)
+
       query.append("page", page)
       query.append("limit", pagination.limit)
 
@@ -189,6 +206,7 @@ const SalesReports = () => {
       const data = await res.json()
       setReports(data.reports || [])
       setCurrentMonth(data.currentMonth);
+      setTodayReports(data.today || 0)   
 
       if (data.pagination) {
         setPagination((prev) => ({
@@ -226,6 +244,7 @@ const SalesReports = () => {
     setStartDate("")
     setEndDate("")
     setSelectedUser("all")
+    setSelectedManager("all")
     setError(null)
     fetchReports(1)
   }
@@ -976,6 +995,27 @@ const SalesReports = () => {
                 </select>
               </div>
             )}
+            {currentUser.role === "admin" && (
+              <div>
+                <label className="block text-sm font-medium text-coral-700 mb-2">
+                  Filter by Manager
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-coral-300 rounded-lg shadow-sm 
+                            focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500 bg-white"
+                  value={selectedManager}
+                  onChange={(e) => setSelectedManager(e.target.value)}
+                >
+                  <option value="all">All Managers</option>
+                  {availableManagers.map((manager) => (
+                    <option key={manager._id} value={manager._id}>
+                      {manager.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex items-end space-x-2">
               <button
@@ -1043,7 +1083,7 @@ const SalesReports = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl shadow-lg border border-emerald-200 p-6 hover:shadow-xl transition-shadow duration-200">
+          {/* <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl shadow-lg border border-emerald-200 p-6 hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg flex items-center justify-center shadow-md">
@@ -1062,7 +1102,23 @@ const SalesReports = () => {
                 <p className="text-2xl font-bold text-emerald-900">{totalMeetings}</p>
               </div>
             </div>
+          </div> */}
+          <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-xl shadow-lg border border-rose-200 p-6 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-to-r from-rose-400 to-red-500 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2h6v2m-7-8h8l-1 5H7l1-5z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-rose-700">Today's Reports</p>
+                <p className="text-2xl font-bold text-rose-900">{todayReports}</p>
+              </div>
+            </div>
           </div>
+
           
         </div>
 
@@ -1693,27 +1749,33 @@ const SalesReports = () => {
                   <div className="px-6 py-4 bg-gradient-to-r from-coral-50 to-orange-50 border-b border-b-white">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Report -{" "}
+                          {currentUser.role === "admin" && report.user.managerId?.name && (
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Manager - {report.user.managerId.name}
+                             </h3>  
+                            
+                          )}
+                          
+                       
+                        {report?.user?.name && (
+                        <p className="text-sm text-black font-bold mt-1">
+                          By: {report.user.name}
+                          {report.user.role && (
+                            <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getRoleBadgeColor(report.user.role)}`}>
+                              {getRoleDisplayName(report.user.role)}
+                            </span>
+                          )}
+                          <span className="ml-3 text-xs text-gray-500">
                           {new Date(report.date).toLocaleDateString("en-US", {
                             weekday: "long",
                             year: "numeric",
                             month: "long",
                             day: "numeric",
                           })}
-                        </h3>
-                        {report?.user?.name && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            By: {report.user.name}
-                            {report.user.role && (
-                              <span
-                                className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getRoleBadgeColor(report.userRole)}`}
-                              >
-                                {getRoleDisplayName(report.user.role)}
-                              </span>
-                            )}
-                          </p>
-                        )}
+                          </span>
+                          
+                        </p>
+                      )}
                       </div>
                       <div className="flex flex-row">
                       {(currentUser.role === "user" || currentUser.role === "manager") && (
@@ -2102,3 +2164,4 @@ const SalesReports = () => {
 }
 
 export default SalesReports
+
