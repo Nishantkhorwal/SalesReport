@@ -1198,52 +1198,60 @@ const SalesReports = () => {
 
 
         {isModalOpen && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative">
-                  {/* Close Button */}
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={24} />
-                  </button>
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative">
+      {/* Close Button */}
+      <button
+        onClick={() => setIsModalOpen(false)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      >
+        <X size={24} />
+      </button>
 
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                    📊 User Report Summary
-                  </h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        📊 User Report Summary
+      </h2>
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                      <thead className="bg-gradient-to-r from-coral-100 to-orange-100">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">User</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Total Reports</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Today</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {summaryData.map((user) => (
-                          <tr
-                            key={user._id}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-3 text-gray-800 font-medium">
-                              {user.name}
-                            </td>
-                            <td className="px-4 py-3 text-gray-700">
-                              {user.totalReports}
-                            </td>
-                            <td className="px-4 py-3 text-gray-700">
-                              {user.todayReports}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* Scrollable Section */}
+      <div className="max-h-96 overflow-y-auto overflow-x-auto">
+        <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <thead className="bg-gradient-to-r from-coral-100 to-orange-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                User
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                Total Reports
+              </th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                Today
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {summaryData.map((user) => (
+              <tr
+                key={user._id}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-4 py-3 text-gray-800 font-medium">
+                  {user.name}
+                </td>
+                <td className="px-4 py-3 text-gray-700">
+                  {user.totalReports}
+                </td>
+                <td className="px-4 py-3 text-gray-700">
+                  {user.todayReports}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+)}
+
 
         {/* Empty State */}
         {!loading && reports.length === 0 && (
