@@ -25,7 +25,8 @@ const server = createServer(app);
 
 // CORS Configuration (Must be on Top)
 const allowedOrigins = [
-  "https://sales.rofconnect.com"
+  "https://sales.rofconnect.com",
+  "https://www.sales.rofconnect.com"
 ];
 
 const corsOptions = {
