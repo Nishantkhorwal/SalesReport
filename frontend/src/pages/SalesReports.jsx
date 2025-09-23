@@ -79,7 +79,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
     })
     const data = await res.json()
     if (res.ok) {
@@ -104,7 +104,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
       })
       const data = await res.json()
       if (res.ok) {
@@ -126,7 +126,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
       })
       const data = await res.json()
       if (res.ok) {
@@ -152,7 +152,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
         })
         const currentUser = await userRes.json()
         setCurrentUser(currentUser)
@@ -163,7 +163,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
         })
         const availableUsers = await usersRes.json()
         setAvailableUsers(availableUsers)
@@ -175,7 +175,7 @@ const SalesReports = () => {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
-            credentials: true,
+            credentials: "include",
           })
           const managers = await managersRes.json()
           setAvailableManagers(managers)
@@ -212,7 +212,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
       })
 
       if (!res.ok) {
@@ -368,7 +368,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
         body: formData,
       })
 
@@ -397,7 +397,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
       })
 
       if (!response.ok) {
@@ -425,7 +425,7 @@ const SalesReports = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
         body: JSON.stringify({
           meetingId: followUpMeetingId,
           date: followUpDate,
@@ -463,7 +463,7 @@ const SalesReports = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
         body: JSON.stringify(editFollowUpData),
       })
 
@@ -490,7 +490,7 @@ const SalesReports = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        credentials: true,
+        credentials: "include",
       })
 
       if (!res.ok) throw new Error("Failed to delete follow-up")
