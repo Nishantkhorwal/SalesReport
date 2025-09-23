@@ -30,11 +30,11 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: true,
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,               // Allow cookies
+  credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200,       // for legacy browsers
+  optionsSuccessStatus: 200,
 };
 
 // Apply CORS middleware globally
