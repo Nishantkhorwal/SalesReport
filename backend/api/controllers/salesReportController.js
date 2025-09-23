@@ -756,3 +756,68 @@ export const exportSalesReportsToExcel = async (req, res) => {
 };
 
 
+
+
+export const getReportsSummary = async (req, res) => {
+  try {
+    // Only admin can access
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // Total reports per user
+    const totalReports = await CrmSalesReport.aggregate([
+      {
+        $group: {
+          _id: "$user",   // reports store user in "user" field
+          totalReports: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Today's reports per user
+    const todayReports = await CrmSalesReport.aggregate([
+      {
+        $match: {
+          date: { $gte: startOfDay, $lte: endOfDay }
+        }
+      },
+      {
+        $group: {
+          _id: "$user",
+          todayReports: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Convert to maps
+    const totalMap = new Map(totalReports.map(r => [r._id.toString(), r.totalReports]));
+    const todayMap = new Map(todayReports.map(r => [r._id.toString(), r.todayReports]));
+
+    // Get all users
+    const users = await SalesReportUser.find({}, "name email");
+
+    // Build final summary
+    const summary = users.map(user => ({
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      totalReports: totalMap.get(user._id.toString()) || 0,
+      todayReports: todayMap.get(user._id.toString()) || 0
+    }));
+
+    res.json(summary);
+
+  } catch (error) {
+    console.error("Error fetching report summary:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+

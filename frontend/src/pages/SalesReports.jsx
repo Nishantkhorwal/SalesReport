@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import "../App.css"
+import { X } from "lucide-react"
 
 const SalesReports = () => {
   const [reports, setReports] = useState([])
@@ -45,6 +46,8 @@ const SalesReports = () => {
   const [selectedManager, setSelectedManager] = useState("all")
   const [availableManagers, setAvailableManagers] = useState([])
   const [todayReports, setTodayReports] = useState(0)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [summaryData, setSummaryData] = useState([])
 
 
 
@@ -67,6 +70,24 @@ const SalesReports = () => {
     setFollowUpDate("")
     setFollowUpRemark("")
   }
+  const fetchSummary = async () => {
+  const token = localStorage.getItem("token")
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/report/summary`, {
+      headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+    })
+    const data = await res.json()
+    setSummaryData(data)
+    console.log("summary data",data);
+  } catch (err) {
+    console.error("Error fetching summary:", err)
+  }
+}
+
 
 
 
@@ -978,7 +999,22 @@ const SalesReports = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters Section */}
         <div className="bg-gradient-to-r from-coral-50 to-orange-50 rounded-xl shadow-lg border border-coral-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-coral-800 mb-4">Filters & Search</h2>
+          <div className="flex flex-row justify-between mb-6">
+            <h2 className="text-lg font-semibold text-coral-800 mb-4">Filters & Search</h2>
+            {currentUser.role === "admin" && (
+              <div className="">
+                <button
+                  onClick={() => {
+                    fetchSummary()
+                    setIsModalOpen(true)
+                  }}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shadow-md hover:shadow-xl"
+                >
+                  View User Summary
+                </button>
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Date Range */}
             <div>
@@ -1039,6 +1075,10 @@ const SalesReports = () => {
                 </select>
               </div>
             )}
+            
+
+            {/* Modal */}
+            
 
             {/* Action Buttons */}
             <div className="flex items-end space-x-2">
@@ -1055,6 +1095,7 @@ const SalesReports = () => {
                 Clear
               </button>
             </div>
+            
           </div>
           {error && (
             <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg">
@@ -1153,6 +1194,56 @@ const SalesReports = () => {
             <span className="ml-3 text-gray-600">Loading reports...</span>
           </div>
         )}
+
+
+
+        {isModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-6 relative">
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={24} />
+                  </button>
+
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                    📊 User Report Summary
+                  </h2>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                      <thead className="bg-gradient-to-r from-coral-100 to-orange-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">User</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Total Reports</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Today</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {summaryData.map((user) => (
+                          <tr
+                            key={user._id}
+                            className="hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-3 text-gray-800 font-medium">
+                              {user.name}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {user.totalReports}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {user.todayReports}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
 
         {/* Empty State */}
         {!loading && reports.length === 0 && (
