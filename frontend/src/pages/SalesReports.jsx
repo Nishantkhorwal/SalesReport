@@ -171,7 +171,11 @@ const SalesReports = () => {
         // Fetch managers if current user is admin
         if (currentUser.role === "admin") {
           const managersRes = await fetch(`${API_BASE_URL}/api/auth/managers`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: true,
           })
           const managers = await managersRes.json()
           setAvailableManagers(managers)
