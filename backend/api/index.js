@@ -29,15 +29,27 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like Postman, curl)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true); // origin allowed
+    } else {
+      callback(new Error("CORS policy: Origin not allowed"), false);
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
+  credentials: true,               // Allow cookies
   allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 200,       // for legacy browsers
 };
 
+// Apply CORS middleware globally
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+
+// Preflight requests
+app.options("*", cors(corsOptions)); 
 
 // Middleware
 // enable preflight for all routes
