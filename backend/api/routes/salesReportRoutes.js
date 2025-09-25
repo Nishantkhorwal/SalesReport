@@ -1,5 +1,5 @@
 import express from 'express';
-import { addFollowUpToMeeting, createSalesReport, deleteSalesReport, editSalesReport, exportSalesReportsToExcel, getAllFollowUps, getReportsSummary, getSalesReportById, getSalesReports, getTodaysFollowUps } from '../controllers/salesReportController.js';
+import { addFollowUpToMeeting, createSalesReport, deleteSalesReport, downloadReportsSummary, editSalesReport, exportSalesReportsToExcel, getAllFollowUps, getReportsSummary, getSalesReportById, getSalesReports, getTodaysFollowUps } from '../controllers/salesReportController.js';
 import upload from '../multerConfig.js';
 import { authenticateUser } from '../middleware/auth.js';
 
@@ -35,5 +35,6 @@ router.post(
 );
 
 router.get('/summary', authenticateUser, getReportsSummary);
+router.get('/download-summary', authenticateUser, downloadReportsSummary);
 
 export default router;

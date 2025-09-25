@@ -769,6 +769,13 @@ export const getReportsSummary = async (req, res) => {
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
+    // Previous day range
+    const yesterdayStart = new Date(startOfDay);
+    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+    const yesterdayEnd = new Date(endOfDay);
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+
     // Total reports per user
     const totalReports = await CrmSalesReport.aggregate([
       { $group: { _id: "$user", totalReports: { $sum: 1 } } }
@@ -780,9 +787,16 @@ export const getReportsSummary = async (req, res) => {
       { $group: { _id: "$user", todayReports: { $sum: 1 } } }
     ]);
 
+    // Yesterday's reports per user
+    const yesterdayReports = await CrmSalesReport.aggregate([
+      { $match: { date: { $gte: yesterdayStart, $lte: yesterdayEnd } } },
+      { $group: { _id: "$user", yesterdayReports: { $sum: 1 } } }
+    ]);
+
     // Convert arrays to maps for quick lookup
     const totalMap = new Map(totalReports.map(r => [r._id.toString(), r.totalReports]));
     const todayMap = new Map(todayReports.map(r => [r._id.toString(), r.todayReports]));
+    const yesterdayMap = new Map(yesterdayReports.map(r => [r._id.toString(), r.yesterdayReports]));
 
     // Fetch all users (non-managers) with their managers populated
     const users = await SalesReportUser.find({ role: "user" })
@@ -807,7 +821,8 @@ export const getReportsSummary = async (req, res) => {
         name: user.name,
         email: user.email,
         totalReports: totalMap.get(user._id.toString()) || 0,
-        todayReports: todayMap.get(user._id.toString()) || 0
+        todayReports: todayMap.get(user._id.toString()) || 0,
+        yesterdayReports: yesterdayMap.get(user._id.toString()) || 0
       });
     });
 
@@ -821,6 +836,123 @@ export const getReportsSummary = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
+
+export const downloadReportsSummary = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // Yesterday
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const startOfYesterday = new Date(yesterday.setHours(0, 0, 0, 0));
+    const endOfYesterday = new Date(yesterday.setHours(23, 59, 59, 999));
+
+    // Aggregations
+    const totalReports = await CrmSalesReport.aggregate([
+      { $group: { _id: "$user", totalReports: { $sum: 1 } } }
+    ]);
+    const todayReports = await CrmSalesReport.aggregate([
+      { $match: { date: { $gte: startOfDay, $lte: endOfDay } } },
+      { $group: { _id: "$user", todayReports: { $sum: 1 } } }
+    ]);
+    const yesterdayReports = await CrmSalesReport.aggregate([
+      { $match: { date: { $gte: startOfYesterday, $lte: endOfYesterday } } },
+      { $group: { _id: "$user", yesterdayReports: { $sum: 1 } } }
+    ]);
+
+    // Convert to maps
+    const totalMap = new Map(totalReports.map(r => [r._id.toString(), r.totalReports]));
+    const todayMap = new Map(todayReports.map(r => [r._id.toString(), r.todayReports]));
+    const yesterdayMap = new Map(yesterdayReports.map(r => [r._id.toString(), r.yesterdayReports]));
+
+    // Get all users with manager
+    const users = await SalesReportUser.find({ role: "user" })
+      .select("name email managerId")
+      .populate({ path: "managerId", select: "name email" });
+
+    // Group manager-wise
+    const managerMap = new Map();
+    users.forEach(user => {
+      const managerId = user.managerId ? user.managerId._id.toString() : "no-manager";
+      const managerData = user.managerId
+        ? { managerId: user.managerId._id, name: user.managerId.name, email: user.managerId.email }
+        : { managerId: null, name: "No Manager", email: null };
+
+      if (!managerMap.has(managerId)) {
+        managerMap.set(managerId, { manager: managerData, users: [] });
+      }
+
+      managerMap.get(managerId).users.push({
+        name: user.name,
+        email: user.email,
+        totalReports: totalMap.get(user._id.toString()) || 0,
+        yesterdayReports: yesterdayMap.get(user._id.toString()) || 0,
+        todayReports: todayMap.get(user._id.toString()) || 0
+      });
+    });
+
+    const summary = Array.from(managerMap.values());
+
+    // 📊 Generate Excel
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Report Summary");
+
+    // Headers
+    worksheet.columns = [
+      { header: "Manager", key: "manager", width: 25 },
+      { header: "Manager Email", key: "managerEmail", width: 30 },
+      { header: "User", key: "user", width: 25 },
+      { header: "User Email", key: "userEmail", width: 30 },
+      { header: "Total Reports", key: "total", width: 15 },
+      { header: "Yesterday", key: "yesterday", width: 15 },
+      { header: "Today", key: "today", width: 15 },
+    ];
+
+    // Data
+    summary.forEach(managerGroup => {
+      managerGroup.users.forEach(user => {
+        worksheet.addRow({
+          manager: managerGroup.manager.name,
+          managerEmail: managerGroup.manager.email || "N/A",
+          user: user.name,
+          userEmail: user.email,
+          total: user.totalReports,
+          yesterday: user.yesterdayReports,
+          today: user.todayReports,
+        });
+      });
+    });
+
+    // Format header bold
+    worksheet.getRow(1).font = { bold: true };
+
+    // Send file
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=report-summary.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Error generating Excel:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 
 

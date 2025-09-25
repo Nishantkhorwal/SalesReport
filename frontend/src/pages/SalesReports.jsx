@@ -70,6 +70,43 @@ const SalesReports = () => {
     setFollowUpDate("")
     setFollowUpRemark("")
   }
+  const handleDownloadSummary = async () => {
+  try {
+    const token = localStorage.getItem("token"); // assuming JWT is saved here
+
+    const response = await fetch(`${API_BASE_URL}/api/report/download-summary`, {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // send token
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to download file");
+    }
+
+    // Convert to blob
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // Create temp <a> tag to trigger download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "report-summary.xlsx"; // filename
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Failed to download summary. Please try again.");
+  }
+};
+
   const fetchSummary = async () => {
   const token = localStorage.getItem("token")
   try {
@@ -1207,10 +1244,20 @@ const SalesReports = () => {
       >
         <X size={24} />
       </button>
+      <div className="flex gap-2">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+          📊 User Report Summary
+        </h2>
+        <div>
+          <button
+            onClick={handleDownloadSummary}
+            className="ml-4 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm"
+          >
+            ⬇️ Download Excel
+          </button>
+        </div>
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        📊 User Report Summary
-      </h2>
+      </div> 
 
       {/* Scrollable Section */}
       <div className="max-h-96 overflow-y-auto overflow-x-auto">
@@ -1231,6 +1278,9 @@ const SalesReports = () => {
                     Total Reports
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Yesterday
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Today
                   </th>
                 </tr>
@@ -1244,8 +1294,9 @@ const SalesReports = () => {
                     <td className="px-4 py-3 text-gray-800 font-medium">
                       {user.name}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{user.totalReports}</td>
-                    <td className="px-4 py-3 text-gray-700">{user.todayReports}</td>
+                    <td className="px-4 py-3 text-left text-gray-700">{user.totalReports}</td>
+                    <td className="px-4 py-3 text-left text-gray-700">{user.yesterdayReports}</td>
+                    <td className="px-4 py-3 text-left text-gray-700">{user.todayReports}</td>
                   </tr>
                 ))}
               </tbody>
