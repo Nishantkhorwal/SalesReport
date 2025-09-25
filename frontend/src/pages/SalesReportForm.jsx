@@ -140,7 +140,6 @@ const SalesReportForm = () => {
                         onChange={handleFileChange}
                         className="hidden"
                         id="visitingCard"
-                        required
                       />
                       <label
                         htmlFor="visitingCard"
