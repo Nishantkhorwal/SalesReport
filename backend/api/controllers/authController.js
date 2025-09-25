@@ -225,29 +225,46 @@ export const getAvailableUsers = async (req, res) => {
   try {
     const { role, id } = req.user;
 
-    let users;
+    let users = [];
+
     if (role === 'admin') {
-      // Admins can see all regular users (role: 'user')
-      users = await SalesReportUser.find({ role: 'user' }).select('name email role _id managerId');
+      // Admin can see all users and managers
+      users = await SalesReportUser.find({})
+        .select('name email role _id managerId');
     } else if (role === 'manager') {
-      // Managers can see their team members who are regular users
-      users = await SalesReportUser.find({ 
+      // Manager sees only their team members (exclude other managers)
+      users = await SalesReportUser.find({
         managerId: id,
-        role: 'user'  // Only get users, not other managers
-      }).select('name email role _id');
+        role: 'user', // only team members who are regular users
+      }).select('name email role _id managerId');
     } else {
-      // Regular users can't see any other users
-      users = [];
+      // Regular user sees only themselves
+      const self = await SalesReportUser.findById(id)
+        .select('name email role _id managerId');
+      if (self) users.push(self);
     }
 
-    res.status(200).json(users);
+    // Optional: add a label "(Manager)" for users who are managers (only for admin view)
+    const usersWithLabels = users.map(u => ({
+      _id: u._id,
+      name: u.role === 'manager' && role === 'admin' ? `${u.name} (Manager)` : u.name,
+      email: u.email,
+      role: u.role,
+      managerId: u.managerId || null
+    }));
+
+    res.status(200).json(usersWithLabels);
+
   } catch (err) {
-    res.status(500).json({ 
-      message: 'Failed to fetch available users', 
-      error: err.message 
+    res.status(500).json({
+      message: 'Failed to fetch available users',
+      error: err.message
     });
   }
 };
+
+
+
 
 // Get current user info
 export const getCurrentUser = async (req, res) => {

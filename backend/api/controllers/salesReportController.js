@@ -206,22 +206,28 @@ export const getSalesReports = async (req, res) => {
     }
 
     // Manager filter (new logic)
+    // Manager filter (new logic)
     if (managerId && managerId !== "all") {
       // Get all users under this manager
       const teamMembers = await SalesReportUser.find({ managerId }, "_id");
       const teamUserIds = teamMembers.map(u => u._id);
 
-      // If no team members found, return empty result
+      // Always include manager's own ID as well
+      teamUserIds.push(managerId);
+
+      // If no team members + no manager found, return empty result
       if (teamUserIds.length === 0) {
         return res.status(200).json({
           reports: [],
           pagination: { total: 0, page: 1, limit: limit, totalPages: 0 },
-          currentMonth: 0
+          currentMonth: 0,
+          today: 0
         });
       }
 
       query.user = { $in: teamUserIds };
     }
+
 
     // User filter (same as before)
     if (userId && userId !== "all") {
@@ -246,6 +252,10 @@ export const getSalesReports = async (req, res) => {
       } else if (role === "manager" && !managerId) {
         const assignedUsers = await SalesReportUser.find({ managerId: id }, "_id");
         const userIds = assignedUsers.map(user => user._id);
+
+        // Include manager’s own reports too
+        userIds.push(id);
+
         query.user = { $in: userIds };
       }
       // Admin sees all
@@ -524,6 +534,10 @@ export const getAllFollowUps = async (req, res) => {
     } else if (role === 'manager') {
       const teamMembers = await SalesReportUser.find({ managerId: userId }, '_id');
       const teamIds = teamMembers.map(member => member._id);
+
+      // Include manager's own ID
+      teamIds.push(userId);
+
       userFilter.user = { $in: teamIds };
     }
     // Admin sees all — no filter
@@ -568,6 +582,10 @@ export const getTodaysFollowUps = async (req, res) => {
     } else if (role === 'manager') {
       const teamMembers = await SalesReportUser.find({ managerId: userId }, '_id');
       const teamIds = teamMembers.map(member => member._id);
+
+      // include manager's own reports too
+      teamIds.push(userId);
+
       userFilter.user = { $in: teamIds };
     }
     // Admin sees all — no filter

@@ -77,7 +77,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                   </button>
                 </Link>
               </li>
-            {userRole === 'user' && (
+            {(userRole === "user" || userRole === "manager") && (
               <li>
                 <Link to="/createreport">
                   <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-100 hover:text-gray-900 hover:bg-gray-100">
@@ -87,6 +87,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
                 </Link>
               </li>
             )}
+
             
             {/* {userRole === 'admin' && (  
               <li className=''>
