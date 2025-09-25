@@ -60,7 +60,7 @@ const SalesReportForm = () => {
     }
 
     const formData = new FormData()
-    formData.append("date", date)
+    // formData.append("date", date)
     formData.append("meetings", JSON.stringify([meeting]))
     if (visitingCard) {
       formData.append("visitingCard", visitingCard)
@@ -125,8 +125,7 @@ const SalesReportForm = () => {
                   <input
                     type="date"
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
+                    readOnly 
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
                   />
                 </div>

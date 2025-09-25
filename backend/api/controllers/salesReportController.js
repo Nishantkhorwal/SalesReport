@@ -10,7 +10,7 @@ import ExcelJS from "exceljs";
 
 export const createSalesReport = async (req, res) => {
   try {
-    const { meetings, date } = req.body;
+    const { meetings} = req.body;
 
     // Parse meetings from JSON string
     let parsedMeetings;
@@ -52,10 +52,11 @@ export const createSalesReport = async (req, res) => {
         followUps,
       };
     });
-
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const report = await CrmSalesReport.create({
       user: req.user.id,
-      date,
+      date : today,
       meetings: formattedMeetings,
     });
 
