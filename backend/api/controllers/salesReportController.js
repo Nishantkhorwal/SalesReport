@@ -22,6 +22,9 @@ export const createSalesReport = async (req, res) => {
     }
 
     const visitingCardFile = req.file;
+    if (!visitingCardFile) {
+      return res.status(400).json({ message: "Visiting card image is required" });
+    }
 
     // Prepare formatted meetings with status & followUps
     const formattedMeetings = parsedMeetings.map((meeting) => {

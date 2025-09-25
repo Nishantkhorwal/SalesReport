@@ -50,6 +50,10 @@ const SalesReportForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!visitingCard) {
+    alert("Please upload a visiting card image before submitting.");
+    return; // stop form submission
+  }
     setIsSubmitting(true)
 
     const token = localStorage.getItem("token")
