@@ -782,7 +782,6 @@ export const exportSalesReportsToExcel = async (req, res) => {
 
 export const getReportsSummary = async (req, res) => {
   try {
-    // Only admin can access
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -791,43 +790,42 @@ export const getReportsSummary = async (req, res) => {
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-    // Previous day range
+    // Yesterday
     const yesterdayStart = new Date(startOfDay);
     yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-
     const yesterdayEnd = new Date(endOfDay);
     yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
 
-    // Total reports per user
+    // Aggregate reports
     const totalReports = await CrmSalesReport.aggregate([
       { $group: { _id: "$user", totalReports: { $sum: 1 } } }
     ]);
-
-    // Today's reports per user
     const todayReports = await CrmSalesReport.aggregate([
       { $match: { date: { $gte: startOfDay, $lte: endOfDay } } },
       { $group: { _id: "$user", todayReports: { $sum: 1 } } }
     ]);
-
-    // Yesterday's reports per user
     const yesterdayReports = await CrmSalesReport.aggregate([
       { $match: { date: { $gte: yesterdayStart, $lte: yesterdayEnd } } },
       { $group: { _id: "$user", yesterdayReports: { $sum: 1 } } }
     ]);
 
-    // Convert arrays to maps for quick lookup
+    // Maps for quick lookup
     const totalMap = new Map(totalReports.map(r => [r._id.toString(), r.totalReports]));
     const todayMap = new Map(todayReports.map(r => [r._id.toString(), r.todayReports]));
     const yesterdayMap = new Map(yesterdayReports.map(r => [r._id.toString(), r.yesterdayReports]));
 
-    // Fetch all users (non-managers) with their managers populated
+    // Fetch users with managers
     const users = await SalesReportUser.find({ role: "user" })
       .select("name email managerId")
       .populate({ path: "managerId", select: "name email" });
 
-    // Group users by manager
+    // Fetch all managers
+    const managers = await SalesReportUser.find({ role: "manager" })
+      .select("name email");
+
     const managerMap = new Map();
 
+    // Group users by manager
     users.forEach(user => {
       const managerId = user.managerId ? user.managerId._id.toString() : "no-manager";
       const managerData = user.managerId
@@ -844,13 +842,32 @@ export const getReportsSummary = async (req, res) => {
         email: user.email,
         totalReports: totalMap.get(user._id.toString()) || 0,
         todayReports: todayMap.get(user._id.toString()) || 0,
-        yesterdayReports: yesterdayMap.get(user._id.toString()) || 0
+        yesterdayReports: yesterdayMap.get(user._id.toString()) || 0,
+        isManager: false
       });
     });
 
-    // Convert map to array for response
-    const summary = Array.from(managerMap.values());
+    // Add managers' own reports
+    managers.forEach(manager => {
+      const managerId = manager._id.toString();
+      const managerData = { managerId, name: manager.name, email: manager.email };
 
+      if (!managerMap.has(managerId)) {
+        managerMap.set(managerId, { manager: managerData, users: [] });
+      }
+
+      managerMap.get(managerId).users.push({
+        userId: manager._id,
+        name: manager.name,
+        email: manager.email,
+        totalReports: totalMap.get(managerId) || 0,
+        todayReports: todayMap.get(managerId) || 0,
+        yesterdayReports: yesterdayMap.get(managerId) || 0,
+        isManager: true
+      });
+    });
+
+    const summary = Array.from(managerMap.values());
     res.json(summary);
 
   } catch (error) {
@@ -858,6 +875,7 @@ export const getReportsSummary = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
@@ -896,13 +914,19 @@ export const downloadReportsSummary = async (req, res) => {
     const todayMap = new Map(todayReports.map(r => [r._id.toString(), r.todayReports]));
     const yesterdayMap = new Map(yesterdayReports.map(r => [r._id.toString(), r.yesterdayReports]));
 
-    // Get all users with manager
+    // Get users with their manager
     const users = await SalesReportUser.find({ role: "user" })
       .select("name email managerId")
       .populate({ path: "managerId", select: "name email" });
 
+    // Get all managers
+    const managers = await SalesReportUser.find({ role: "manager" })
+      .select("name email");
+
     // Group manager-wise
     const managerMap = new Map();
+
+    // Users grouped under managers
     users.forEach(user => {
       const managerId = user.managerId ? user.managerId._id.toString() : "no-manager";
       const managerData = user.managerId
@@ -918,7 +942,27 @@ export const downloadReportsSummary = async (req, res) => {
         email: user.email,
         totalReports: totalMap.get(user._id.toString()) || 0,
         yesterdayReports: yesterdayMap.get(user._id.toString()) || 0,
-        todayReports: todayMap.get(user._id.toString()) || 0
+        todayReports: todayMap.get(user._id.toString()) || 0,
+        isManager: false
+      });
+    });
+
+    // Add managers’ own reports
+    managers.forEach(manager => {
+      const managerId = manager._id.toString();
+      const managerData = { managerId, name: manager.name, email: manager.email };
+
+      if (!managerMap.has(managerId)) {
+        managerMap.set(managerId, { manager: managerData, users: [] });
+      }
+
+      managerMap.get(managerId).users.push({
+        name: `⭐ ${manager.name}`, // mark clearly in Excel
+        email: manager.email,
+        totalReports: totalMap.get(managerId) || 0,
+        yesterdayReports: yesterdayMap.get(managerId) || 0,
+        todayReports: todayMap.get(managerId) || 0,
+        isManager: true
       });
     });
 
@@ -932,7 +976,7 @@ export const downloadReportsSummary = async (req, res) => {
     worksheet.columns = [
       { header: "Manager", key: "manager", width: 25 },
       { header: "Manager Email", key: "managerEmail", width: 30 },
-      { header: "User", key: "user", width: 25 },
+      { header: "User / Manager", key: "user", width: 25 },
       { header: "User Email", key: "userEmail", width: 30 },
       { header: "Total Reports", key: "total", width: 15 },
       { header: "Yesterday", key: "yesterday", width: 15 },
@@ -974,6 +1018,7 @@ export const downloadReportsSummary = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 

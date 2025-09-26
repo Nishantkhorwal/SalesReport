@@ -1287,18 +1287,21 @@ const SalesReports = () => {
               </thead>
               <tbody>
                 {managerGroup.users.map((user) => (
-                  <tr
-                    key={user.userId}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-gray-800 font-medium">
-                      {user.name}
-                    </td>
-                    <td className="px-4 py-3 text-left text-gray-700">{user.totalReports}</td>
-                    <td className="px-4 py-3 text-left text-gray-700">{user.yesterdayReports}</td>
-                    <td className="px-4 py-3 text-left text-gray-700">{user.todayReports}</td>
-                  </tr>
-                ))}
+  <tr
+    key={user.userId}
+    className={`transition-colors ${
+      user.isManager ? "bg-yellow-50 font-semibold" : "hover:bg-gray-50"
+    }`}
+  >
+    <td className="px-4 py-3 text-gray-800">
+      {user.isManager ? `⭐ Manager: ${user.name}` : user.name}
+    </td>
+    <td className="px-4 py-3 text-left text-gray-700">{user.totalReports}</td>
+    <td className="px-4 py-3 text-left text-gray-700">{user.yesterdayReports}</td>
+    <td className="px-4 py-3 text-left text-gray-700">{user.todayReports}</td>
+  </tr>
+))}
+
               </tbody>
             </table>
           </div>
