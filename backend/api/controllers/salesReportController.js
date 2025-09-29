@@ -8,70 +8,70 @@ import ExcelJS from "exceljs";
 
 
 
-export const createSalesReport = async (req, res) => {
-  try {
-    const { meetings} = req.body;
+// export const createSalesReport = async (req, res) => {
+//   try {
+//     const { meetings} = req.body;
 
-    // Parse meetings from JSON string
-    let parsedMeetings;
-    try {
-      parsedMeetings = JSON.parse(meetings);
-      if (!Array.isArray(parsedMeetings)) throw new Error();
-    } catch {
-      return res.status(400).json({ message: 'Meetings must be a valid JSON array' });
-    }
+//     // Parse meetings from JSON string
+//     let parsedMeetings;
+//     try {
+//       parsedMeetings = JSON.parse(meetings);
+//       if (!Array.isArray(parsedMeetings)) throw new Error();
+//     } catch {
+//       return res.status(400).json({ message: 'Meetings must be a valid JSON array' });
+//     }
 
-    const visitingCardFile = req.file;
-    if (!visitingCardFile) {
-      return res.status(400).json({ message: "Visiting card image is required" });
-    }
+//     const visitingCardFile = req.file;
+//     if (!visitingCardFile) {
+//       return res.status(400).json({ message: "Visiting card image is required" });
+//     }
 
-    // Prepare formatted meetings with status & followUps
-    const formattedMeetings = parsedMeetings.map((meeting) => {
-      // Validate status
-      const validStatuses = ["Interested", "Not Interested"];
-      if (!validStatuses.includes(meeting.status)) {
-        throw new Error(`Invalid status '${meeting.status}' for meeting with firm '${meeting.firmName}'`);
-      }
+//     // Prepare formatted meetings with status & followUps
+//     const formattedMeetings = parsedMeetings.map((meeting) => {
+//       // Validate status
+//       const validStatuses = ["Interested", "Not Interested"];
+//       if (!validStatuses.includes(meeting.status)) {
+//         throw new Error(`Invalid status '${meeting.status}' for meeting with firm '${meeting.firmName}'`);
+//       }
 
-      // Prepare followUps array (optional)
-      const followUps = Array.isArray(meeting.followUps)
-        ? meeting.followUps.map((followUp) => ({
-            date: new Date(followUp.date),
-            remark: followUp.remark || "",
-          }))
-        : [];
+//       // Prepare followUps array (optional)
+//       const followUps = Array.isArray(meeting.followUps)
+//         ? meeting.followUps.map((followUp) => ({
+//             date: new Date(followUp.date),
+//             remark: followUp.remark || "",
+//           }))
+//         : [];
 
-      return {
-        firmName: meeting.firmName,
-        ownerName: meeting.ownerName,
-        phoneNumber: meeting.phoneNumber,
-        email: meeting.email,
-        teamSize: meeting.teamSize,
-        rera: meeting.rera,
-        remark: meeting.remark,
-        status: meeting.status,
-        visitingCard: visitingCardFile ? `uploads/${visitingCardFile.filename}` : null,
-        followUps,
-      };
-    });
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const report = await CrmSalesReport.create({
-      user: req.user.id,
-      date : today,
-      meetings: formattedMeetings,
-    });
+//       return {
+//         firmName: meeting.firmName,
+//         ownerName: meeting.ownerName,
+//         phoneNumber: meeting.phoneNumber,
+//         email: meeting.email,
+//         teamSize: meeting.teamSize,
+//         rera: meeting.rera,
+//         remark: meeting.remark,
+//         status: meeting.status,
+//         visitingCard: visitingCardFile ? `uploads/${visitingCardFile.filename}` : null,
+//         followUps,
+//       };
+//     });
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const report = await CrmSalesReport.create({
+//       user: req.user.id,
+//       date : today,
+//       meetings: formattedMeetings,
+//     });
 
-    res.status(201).json({
-      message: 'Sales report created successfully',
-      report,
-    });
-  } catch (err) {
-    console.error('Sales report creation failed:', err);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-};
+//     res.status(201).json({
+//       message: 'Sales report created successfully',
+//       report,
+//     });
+//   } catch (err) {
+//     console.error('Sales report creation failed:', err);
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// };
 
 
 // export const getSalesReports = async (req, res) => {
@@ -184,21 +184,266 @@ export const createSalesReport = async (req, res) => {
 //   }
 // };
 
+export const createSalesReport = async (req, res) => {
+  try {
+    const { meetings, latitude, longitude } = req.body;
+
+    // Parse meetings from JSON string
+    let parsedMeetings;
+    try {
+      parsedMeetings = JSON.parse(meetings);
+      if (!Array.isArray(parsedMeetings)) throw new Error();
+    } catch {
+      return res.status(400).json({ message: 'Meetings must be a valid JSON array' });
+    }
+
+    const visitingCardFile = req.file;
+    if (!visitingCardFile) {
+      return res.status(400).json({ message: "Visiting card image is required" });
+    }
+
+    // Prepare formatted meetings
+    const formattedMeetings = parsedMeetings.map((meeting) => {
+      // Default to Broker if meetingType not provided (backward compatibility)
+      const meetingType = meeting.meetingType || "Broker";
+
+      // Prepare followUps array (optional)
+      const followUps = Array.isArray(meeting.followUps)
+        ? meeting.followUps.map((followUp) => ({
+            date: new Date(followUp.date),
+            remark: followUp.remark || "",
+          }))
+        : [];
+
+      if (meetingType === "Broker") {
+        // Validate Broker status
+        const validStatuses = ["Interested", "Not Interested"];
+        if (!validStatuses.includes(meeting.status)) {
+          throw new Error(`Invalid status '${meeting.status}' for broker meeting with firm '${meeting.firmName}'`);
+        }
+
+        return {
+          meetingType,
+          firmName: meeting.firmName,
+          ownerName: meeting.ownerName,
+          phoneNumber: meeting.phoneNumber,
+          email: meeting.email,
+          teamSize: meeting.teamSize,
+          rera: meeting.rera,
+          remark: meeting.remark,
+          status: meeting.status,
+          visitingCard: visitingCardFile ? `uploads/${visitingCardFile.filename}` : null,
+          followUps,
+        };
+      } else if (meetingType === "Client") {
+        // Validate Client status
+        const validClientStatuses = ["Hot", "Cold", "Dead"];
+        if (!validClientStatuses.includes(meeting.clientStatus)) {
+          throw new Error(`Invalid status '${meeting.clientStatus}' for client '${meeting.clientName}'`);
+        }
+
+        return {
+          meetingType,
+          clientName: meeting.clientName,
+          brokerName: meeting.brokerName,
+          brokerType: meeting.brokerType, // Direct/Site/Reception
+          phoneLast5: meeting.phoneLast5,
+          clientStatus: meeting.clientStatus,
+          remark: meeting.remark,
+          visitingCard: visitingCardFile ? `uploads/${visitingCardFile.filename}` : null,
+          followUps,
+        };
+      } else {
+        throw new Error(`Invalid meetingType '${meetingType}'`);
+      }
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const report = await CrmSalesReport.create({
+      user: req.user.id,
+      date: today,
+      location: {
+        latitude: latitude || null,
+        longitude: longitude || null,
+      },
+      meetings: formattedMeetings,
+    });
+
+    res.status(201).json({
+      message: 'Sales report created successfully',
+      report,
+    });
+  } catch (err) {
+    console.error('Sales report creation failed:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+// export const getSalesReports = async (req, res) => {
+//   try {
+//     const { role, id } = req.user;
+//     const { 
+//       startDate, 
+//       endDate, 
+//       userId, 
+//       managerId,   // <-- new filter
+//       page = 1,    
+//       limit = 10   
+//     } = req.query;
+
+//     const query = {};
+
+//     // Date filtering
+//     if (startDate || endDate) {
+//       query.date = {};
+//       if (startDate) query.date.$gte = new Date(startDate);
+//       if (endDate) {
+//         const end = new Date(endDate);
+//         end.setHours(23, 59, 59, 999);
+//         query.date.$lte = end;
+//       }
+//     }
+
+//     // Manager filter (new logic)
+//     // Manager filter (new logic)
+//     if (managerId && managerId !== "all") {
+//       // Get all users under this manager
+//       const teamMembers = await SalesReportUser.find({ managerId }, "_id");
+//       const teamUserIds = teamMembers.map(u => u._id);
+
+//       // Always include manager's own ID as well
+//       teamUserIds.push(managerId);
+
+//       // If no team members + no manager found, return empty result
+//       if (teamUserIds.length === 0) {
+//         return res.status(200).json({
+//           reports: [],
+//           pagination: { total: 0, page: 1, limit: limit, totalPages: 0 },
+//           currentMonth: 0,
+//           today: 0
+//         });
+//       }
+
+//       query.user = { $in: teamUserIds };
+//     }
+
+
+//     // User filter (same as before)
+//     if (userId && userId !== "all") {
+//       if (role === "admin") {
+//         query.user = userId;
+//       } else if (role === "manager") {
+//         const isTeamMember = await SalesReportUser.exists({ _id: userId, managerId: id });
+//         if (!isTeamMember) {
+//           return res.status(403).json({ message: "You can only view your team members' reports" });
+//         }
+//         query.user = userId;
+//       } else if (role === "user") {
+//         if (userId !== id) {
+//           return res.status(403).json({ message: "You can only view your own reports" });
+//         }
+//         query.user = id;
+//       }
+//     } else {
+//       // Role-based fallback
+//       if (role === "user") {
+//         query.user = id;
+//       } else if (role === "manager" && !managerId) {
+//         const assignedUsers = await SalesReportUser.find({ managerId: id }, "_id");
+//         const userIds = assignedUsers.map(user => user._id);
+
+//         // Include manager’s own reports too
+//         userIds.push(id);
+
+//         query.user = { $in: userIds };
+//       }
+//       // Admin sees all
+//     }
+
+//     // Pagination
+//     const pageNumber = parseInt(page);
+//     const limitNumber = parseInt(limit);
+//     const skip = (pageNumber - 1) * limitNumber;
+
+//     // Total count
+//     const total = await CrmSalesReport.countDocuments(query);
+
+//     const reports = await CrmSalesReport.find(query)
+//       .populate({
+//         path: "user",
+//         select: "name email role managerId",
+//         populate: {
+//           path: "managerId",
+//           select: "_id name"
+//         }
+//       })
+//       .sort({ date: -1 })
+//       .skip(skip)
+//       .limit(limitNumber);
+
+//     // Current month count
+//     const firstDayOfMonth = new Date();
+//     firstDayOfMonth.setDate(1);
+//     firstDayOfMonth.setHours(0, 0, 0, 0);
+
+//     const lastDayOfMonth = new Date(firstDayOfMonth);
+//     lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
+//     lastDayOfMonth.setDate(0);
+//     lastDayOfMonth.setHours(23, 59, 59, 999);
+
+//     const currentMonthQuery = {
+//       ...query,
+//       date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+//     };
+
+//     const currentMonthCount = await CrmSalesReport.countDocuments(currentMonthQuery);
+//     const today = new Date()
+//     const startOfDay = new Date(today.setHours(0, 0, 0, 0))
+//     const endOfDay = new Date(today.setHours(23, 59, 59, 999))
+
+//     const todayQuery = {
+//       ...query,
+//       date: { $gte: startOfDay, $lte: endOfDay }
+//     }
+
+//     const todayCount = await CrmSalesReport.countDocuments(todayQuery)
+
+//     res.status(200).json({
+//       reports,
+//       pagination: {
+//         total,
+//         page: pageNumber,
+//         limit: limitNumber,
+//         totalPages: Math.ceil(total / limitNumber)
+//       },
+//       currentMonth: currentMonthCount,
+//       today: todayCount,
+//     });
+
+//   } catch (err) {
+//     console.error("Error fetching sales reports:", err);
+//     res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// };
+
 export const getSalesReports = async (req, res) => {
   try {
     const { role, id } = req.user;
-    const { 
-      startDate, 
-      endDate, 
-      userId, 
-      managerId,   // <-- new filter
-      page = 1,    
-      limit = 10   
+    const {
+      startDate,
+      endDate,
+      userId,
+      managerId,
+      meetingType, // optional filter: Broker / Client
+      page = 1,
+      limit = 10
     } = req.query;
 
     const query = {};
 
-    // Date filtering
+    // Date filter
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
@@ -209,17 +454,17 @@ export const getSalesReports = async (req, res) => {
       }
     }
 
-    // Manager filter (new logic)
-    // Manager filter (new logic)
+    // Meeting type filter (optional)
+    if (meetingType && ["Broker", "Client"].includes(meetingType)) {
+      query["meetings.meetingType"] = meetingType;
+    }
+
+    // Manager filter
     if (managerId && managerId !== "all") {
-      // Get all users under this manager
       const teamMembers = await SalesReportUser.find({ managerId }, "_id");
       const teamUserIds = teamMembers.map(u => u._id);
+      teamUserIds.push(managerId); // include manager's own reports
 
-      // Always include manager's own ID as well
-      teamUserIds.push(managerId);
-
-      // If no team members + no manager found, return empty result
       if (teamUserIds.length === 0) {
         return res.status(200).json({
           reports: [],
@@ -232,37 +477,27 @@ export const getSalesReports = async (req, res) => {
       query.user = { $in: teamUserIds };
     }
 
-
-    // User filter (same as before)
+    // User filter
     if (userId && userId !== "all") {
       if (role === "admin") {
         query.user = userId;
       } else if (role === "manager") {
         const isTeamMember = await SalesReportUser.exists({ _id: userId, managerId: id });
-        if (!isTeamMember) {
-          return res.status(403).json({ message: "You can only view your team members' reports" });
-        }
+        if (!isTeamMember) return res.status(403).json({ message: "You can only view your team members' reports" });
         query.user = userId;
       } else if (role === "user") {
-        if (userId !== id) {
-          return res.status(403).json({ message: "You can only view your own reports" });
-        }
+        if (userId !== id) return res.status(403).json({ message: "You can only view your own reports" });
         query.user = id;
       }
     } else {
-      // Role-based fallback
-      if (role === "user") {
-        query.user = id;
-      } else if (role === "manager" && !managerId) {
+      // Role fallback
+      if (role === "user") query.user = id;
+      else if (role === "manager" && !managerId) {
         const assignedUsers = await SalesReportUser.find({ managerId: id }, "_id");
-        const userIds = assignedUsers.map(user => user._id);
-
-        // Include manager’s own reports too
+        const userIds = assignedUsers.map(u => u._id);
         userIds.push(id);
-
         query.user = { $in: userIds };
       }
-      // Admin sees all
     }
 
     // Pagination
@@ -270,17 +505,13 @@ export const getSalesReports = async (req, res) => {
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
-    // Total count
     const total = await CrmSalesReport.countDocuments(query);
 
     const reports = await CrmSalesReport.find(query)
       .populate({
         path: "user",
         select: "name email role managerId",
-        populate: {
-          path: "managerId",
-          select: "_id name"
-        }
+        populate: { path: "managerId", select: "_id name" }
       })
       .sort({ date: -1 })
       .skip(skip)
@@ -296,33 +527,21 @@ export const getSalesReports = async (req, res) => {
     lastDayOfMonth.setDate(0);
     lastDayOfMonth.setHours(23, 59, 59, 999);
 
-    const currentMonthQuery = {
-      ...query,
-      date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
-    };
-
+    const currentMonthQuery = { ...query, date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth } };
     const currentMonthCount = await CrmSalesReport.countDocuments(currentMonthQuery);
-    const today = new Date()
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0))
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999))
 
-    const todayQuery = {
-      ...query,
-      date: { $gte: startOfDay, $lte: endOfDay }
-    }
-
-    const todayCount = await CrmSalesReport.countDocuments(todayQuery)
+    // Today's count
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+    const todayQuery = { ...query, date: { $gte: startOfDay, $lte: endOfDay } };
+    const todayCount = await CrmSalesReport.countDocuments(todayQuery);
 
     res.status(200).json({
       reports,
-      pagination: {
-        total,
-        page: pageNumber,
-        limit: limitNumber,
-        totalPages: Math.ceil(total / limitNumber)
-      },
+      pagination: { total, page: pageNumber, limit: limitNumber, totalPages: Math.ceil(total / limitNumber) },
       currentMonth: currentMonthCount,
-      today: todayCount,
+      today: todayCount
     });
 
   } catch (err) {
@@ -330,6 +549,95 @@ export const getSalesReports = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+
+
+// export const editSalesReport = async (req, res) => {
+//   try {
+//     const { reportId } = req.params;
+//     const { meetings, date } = req.body;
+//     const visitingCardFile = req.file;
+//     const userId = req.user.id;
+//     const userRole = req.user.role;
+
+//     // Find the report
+//      const report = await CrmSalesReport.findById(reportId)
+//       .populate({
+//         path: 'user',
+//         select: 'managerId',
+//         populate: {
+//           path: 'managerId',
+//           select: '_id'
+//         }
+//       });
+    
+//     if (!report) {
+//       return res.status(404).json({ message: 'Report not found' });
+//     }
+
+//     // Authorization check - only the creator can edit
+//     const isCreator = report.user._id.toString() === userId;
+//     const isAdmin = userRole === 'admin';
+//     const isManagerOfCreator = userRole === 'manager' && report.user.managerId?._id?.toString() === userId;
+
+//     if (!isCreator && !isManagerOfCreator && !isAdmin) {
+//       return res.status(403).json({ message: 'Not authorized to edit this report' });
+//     }
+
+//     // Parse meetings if provided
+//     let parsedMeetings = report.meetings;
+//     if (meetings) {
+//       try {
+//         parsedMeetings = JSON.parse(meetings);
+//         if (!Array.isArray(parsedMeetings)) throw new Error();
+//       } catch {
+//         return res.status(400).json({ message: 'Meetings must be a valid JSON array' });
+//       }
+//     }
+
+//     // Handle visiting card updates
+//     if (visitingCardFile) {
+//       // Delete old visiting card if exists
+//       if (report.meetings[0]?.visitingCard) {
+//         const oldFilePath = path.join(process.cwd(), report.meetings[0].visitingCard);
+//         if (fs.existsSync(oldFilePath)) {
+//           fs.unlinkSync(oldFilePath);
+//         }
+//       }
+      
+//       // Update all meetings with new visiting card path
+//       parsedMeetings = parsedMeetings.map(meeting => ({
+//         ...meeting,
+//         visitingCard: `uploads/${visitingCardFile.filename}`
+//       }));
+//     }
+
+//     // Prepare update data
+//     const updateData = {};
+//     if (date) updateData.date = date;
+//     if (meetings) updateData.meetings = parsedMeetings;
+
+//     // Update the report
+//     const updatedReport = await CrmSalesReport.findByIdAndUpdate(
+//       reportId,
+//       updateData,
+//       { new: true }
+//     ).populate('user', 'name email role');
+
+//     res.status(200).json({
+//       message: 'Report updated successfully',
+//       report: updatedReport
+//     });
+
+//   } catch (err) {
+//     console.error('Error updating sales report:', err);
+//     res.status(500).json({ 
+//       message: 'Failed to update report', 
+//       error: err.message 
+//     });
+//   }
+// };
+
 
 
 export const editSalesReport = async (req, res) => {
@@ -341,27 +649,23 @@ export const editSalesReport = async (req, res) => {
     const userRole = req.user.role;
 
     // Find the report
-     const report = await CrmSalesReport.findById(reportId)
+    const report = await CrmSalesReport.findById(reportId)
       .populate({
-        path: 'user',
-        select: 'managerId',
-        populate: {
-          path: 'managerId',
-          select: '_id'
-        }
+        path: "user",
+        select: "managerId",
+        populate: { path: "managerId", select: "_id" },
       });
-    
-    if (!report) {
-      return res.status(404).json({ message: 'Report not found' });
-    }
 
-    // Authorization check - only the creator can edit
+    if (!report) return res.status(404).json({ message: "Report not found" });
+
+    // Authorization check
     const isCreator = report.user._id.toString() === userId;
-    const isAdmin = userRole === 'admin';
-    const isManagerOfCreator = userRole === 'manager' && report.user.managerId?._id?.toString() === userId;
+    const isAdmin = userRole === "admin";
+    const isManagerOfCreator =
+      userRole === "manager" && report.user.managerId?._id?.toString() === userId;
 
     if (!isCreator && !isManagerOfCreator && !isAdmin) {
-      return res.status(403).json({ message: 'Not authorized to edit this report' });
+      return res.status(403).json({ message: "Not authorized to edit this report" });
     }
 
     // Parse meetings if provided
@@ -371,25 +675,26 @@ export const editSalesReport = async (req, res) => {
         parsedMeetings = JSON.parse(meetings);
         if (!Array.isArray(parsedMeetings)) throw new Error();
       } catch {
-        return res.status(400).json({ message: 'Meetings must be a valid JSON array' });
+        return res.status(400).json({ message: "Meetings must be a valid JSON array" });
       }
     }
 
-    // Handle visiting card updates
+    // Handle visiting card/photo updates
     if (visitingCardFile) {
-      // Delete old visiting card if exists
-      if (report.meetings[0]?.visitingCard) {
-        const oldFilePath = path.join(process.cwd(), report.meetings[0].visitingCard);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
+      parsedMeetings = parsedMeetings.map((meeting) => {
+        // Delete old file if exists
+        if (meeting.visitingCard) {
+          const oldFilePath = path.join(process.cwd(), meeting.visitingCard);
+          if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
         }
-      }
-      
-      // Update all meetings with new visiting card path
-      parsedMeetings = parsedMeetings.map(meeting => ({
-        ...meeting,
-        visitingCard: `uploads/${visitingCardFile.filename}`
-      }));
+
+        // For client meetings, store as normal photo
+        const filePath = `uploads/${visitingCardFile.filename}`;
+        return {
+          ...meeting,
+          visitingCard: filePath, // Works for both visiting cards and client photos
+        };
+      });
     }
 
     // Prepare update data
@@ -398,26 +703,19 @@ export const editSalesReport = async (req, res) => {
     if (meetings) updateData.meetings = parsedMeetings;
 
     // Update the report
-    const updatedReport = await CrmSalesReport.findByIdAndUpdate(
-      reportId,
-      updateData,
-      { new: true }
-    ).populate('user', 'name email role');
+    const updatedReport = await CrmSalesReport.findByIdAndUpdate(reportId, updateData, {
+      new: true,
+    }).populate("user", "name email role");
 
     res.status(200).json({
-      message: 'Report updated successfully',
-      report: updatedReport
+      message: "Report updated successfully",
+      report: updatedReport,
     });
-
   } catch (err) {
-    console.error('Error updating sales report:', err);
-    res.status(500).json({ 
-      message: 'Failed to update report', 
-      error: err.message 
-    });
+    console.error("Error updating sales report:", err);
+    res.status(500).json({ message: "Failed to update report", error: err.message });
   }
 };
-
 
 export const deleteSalesReport = async (req, res) => {
   try {
@@ -614,7 +912,9 @@ export const getTodaysFollowUps = async (req, res) => {
                 reportId: report._id,
                 user: report.user,
                 meetingId: meeting._id,
+                meetingType : meeting.meetingType,
                 firmName: meeting.firmName,
+                clientName : meeting.clientName,
                 followUp: fu,
               });
             }
@@ -724,6 +1024,7 @@ export const exportSalesReportsToExcel = async (req, res) => {
     worksheet.columns = [
       { header: "Report Date", key: "date", width: 15 },
       { header: "User Name", key: "userName", width: 20 },
+      { header: "Meeting Type", key: "meetingType", width: 20 },
       { header: "User Email", key: "userEmail", width: 25 },
       { header: "Firm Name", key: "firmName", width: 20 },
       { header: "Owner Name", key: "ownerName", width: 20 },
@@ -733,7 +1034,11 @@ export const exportSalesReportsToExcel = async (req, res) => {
       { header: "RERA", key: "rera", width: 15 },
       { header: "Remark", key: "remark", width: 30 },
       { header: "Status", key: "status", width: 15 },
-      { header: "Follow Ups", key: "followUps", width: 40 }
+      { header: "Follow Ups", key: "followUps", width: 40 },
+      { header: "Client Name", key: "clientName", width: 20 },
+      { header: "Client Phone", key: "phoneLast5", width: 20 },
+      { header: "Client's Broker Name", key: "brokerName", width: 20 },
+      { header: "Client's Status", key: "clientStatus", width: 20 },
     ];
 
     // Add rows
@@ -742,15 +1047,20 @@ export const exportSalesReportsToExcel = async (req, res) => {
         worksheet.addRow({
           date: report.date.toISOString().split("T")[0],
           userName: report.user?.name || "N/A",
+          meetingType: meeting.meetingType || "",
           userEmail: report.user?.email || "N/A",
-          firmName: meeting.firmName,
-          ownerName: meeting.ownerName,
-          phoneNumber: meeting.phoneNumber,
-          email: meeting.email,
-          teamSize: meeting.teamSize,
-          rera: meeting.rera,
-          remark: meeting.remark,
-          status: meeting.status,
+          firmName: meeting.firmName || "",
+          ownerName: meeting.ownerName || "",
+          phoneNumber: meeting.phoneNumber || "",
+          email: meeting.email || "",
+          teamSize: meeting.teamSize || "",
+          rera: meeting.rera || "",
+          remark: meeting.remark || "",
+          status: meeting.status || "",
+          clientName: meeting.clientName || "",
+          phoneLast5: meeting.phoneLast5 || "",
+          brokerName: meeting.brokerName || "",
+          clientStatus: meeting.clientStatus || "",
           followUps: (meeting.followUps || [])
             .map(f => `${f.date.toISOString().split("T")[0]} - ${f.remark}`)
             .join("\n")

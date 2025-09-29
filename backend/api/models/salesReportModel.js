@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const SalesReportSchema = new mongoose.Schema({
+  
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "SalesReportUser",
@@ -10,11 +11,20 @@ const SalesReportSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  location: { // <-- new field
+    latitude: { type: Number },
+    longitude: { type: Number },
+  },
   meetings: [
     {
-      firmName: { type: String, required: true },
-      ownerName: { type: String, required: true },
-      phoneNumber: { type: String, required: true },
+      meetingType: {
+        type: String,
+        enum: ["Broker", "Client"],
+        default: "Broker",  // ✅ old reports will be treated as Broker
+      },
+      firmName: { type: String},
+      ownerName: { type: String},
+      phoneNumber: { type: String},
       email: { type: String },
       visitingCard: { type: String }, // URL/path of uploaded file
       teamSize: { type: Number },
@@ -23,7 +33,6 @@ const SalesReportSchema = new mongoose.Schema({
       status: {
         type: String,
         enum: ["Interested", "Not Interested"],
-        required: true,
       },
       followUps: [
         {
@@ -35,6 +44,18 @@ const SalesReportSchema = new mongoose.Schema({
           },
         },
       ],
+
+      clientName: { type: String },
+      brokerName: { type: String },
+      brokerType: {
+        type: String,
+        enum: ["Direct", "Site", "Reception"],
+      },
+      phoneLast5: { type: String },
+      clientStatus: {
+        type: String,
+        enum: ["Hot", "Cold", "Dead"],
+      },
     },
 
   ],

@@ -1,4 +1,3 @@
-"use client"
 
 import { useEffect, useState } from "react"
 import "../App.css"
@@ -248,6 +247,24 @@ const SalesReports = () => {
     fetchUserData()
   }, [])
 
+
+
+  const getAddressFromCoords = async (lat, lng) => {
+  if (!lat || !lng) return "Location not available";
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+    if (!res.ok) return "Unable to fetch address";
+
+    const data = await res.json();
+    return data.display_name || "Address not found";
+  } catch (err) {
+    console.error("Error fetching address:", err);
+    return "Error fetching address";
+  }
+};
+
+
   const fetchReports = async (page = 1) => {
     setLoading(true)
     setError(null)
@@ -278,7 +295,22 @@ const SalesReports = () => {
       }
 
       const data = await res.json()
-      setReports(data.reports || [])
+
+      const reportsWithAddress = await Promise.all(
+        data.reports.map(async (report) => {
+          if (report.location?.latitude && report.location?.longitude) {
+            const roundedLat = parseFloat(report.location.latitude.toFixed(5)); // ~1m–10m accuracy
+            const roundedLng = parseFloat(report.location.longitude.toFixed(5));
+
+            const address = await getAddressFromCoords(roundedLat, roundedLng);
+            return { ...report, address };
+          } else {
+            return { ...report, address: "Location not available" };
+          }
+        })
+      );
+
+      setReports(reportsWithAddress || [])
       setCurrentMonth(data.currentMonth);
       setTodayReports(data.today || 0)   
 
@@ -423,7 +455,6 @@ const SalesReports = () => {
       const response = await fetch(`${API_BASE_URL}/api/report/${editingReport}`, {
         method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: "include",
@@ -836,9 +867,20 @@ const SalesReports = () => {
                               <h4 className="font-medium text-gray-900">
                                 <strong>User</strong> : {followUp.user?.name}
                               </h4>
+                              {followUp.meetingType === "Client" ? (
+                              <>
                               <h4 className="font-medium text-gray-900">
-                               <strong>Firm</strong> : {followUp.firmName}
+                               <strong>Client Name</strong> : {followUp.clientName}
                               </h4>
+                              </>
+                              ):(
+                               <>
+                                  <h4 className="font-medium text-gray-900">
+                                  <strong>Firm</strong> : {followUp.firmName}
+                                  </h4>
+                               </>
+                              )}
+                              
                             </div>
                             <div className="flex space-x-2">
                               {/* <button
@@ -923,11 +965,41 @@ const SalesReports = () => {
                     {/* Meeting Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-white">Firm Name : {meeting.firmName}</h3>
+                        {meeting?.meetingType === "Client" ? (
+                          <>
+                          <div>
+                          <h3 className="text-xl font-bold text-white">Client Name : {meeting?.clientName}</h3>
                         </div>
+                          </>
+                        ) : (
+                          <>
+                          <div>
+                          <h3 className="text-xl font-bold text-white">Firm Name : {meeting?.firmName}</h3>
+                        </div>
+                          </>
+                        )}
+                        
                       </div>
-                      <div
+
+                      {meeting?.meetingType === "Client" ? (
+                       <>
+                       <div
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          meeting.status === "Hot"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            : meeting.status === "Cold"
+                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                              : meeting.status === "Reception"
+                                ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                : "bg-slate-100 text-slate-800 border border-slate-200"
+                        }`}
+                      >
+                        {meeting.clientStatus}
+                      </div>
+                       </>
+                      ) : (
+                       <>
+                       <div
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
                           meeting.status === "completed"
                             ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
@@ -940,6 +1012,8 @@ const SalesReports = () => {
                       >
                         {meeting.status}
                       </div>
+                       </>
+                      )}
                     </div>
 
                     {/* Meeting Details Grid */}
@@ -956,10 +1030,22 @@ const SalesReports = () => {
                               />
                             </svg>
                           </div>
-                          <div>
+                          {meeting.meetingType === "Client" ? (
+                           <>
+                           <div>
+                            <p className="text-slate-400 text-sm">Broker</p>
+                            <p className="text-white font-medium">{meeting.brokerName}</p>
+                          </div>
+                           </>
+                          ):(
+                           <>
+                           <div>
                             <p className="text-slate-400 text-sm">Owner</p>
                             <p className="text-white font-medium">{meeting.ownerName}</p>
                           </div>
+                           </> 
+                          )}
+                          
                         </div>
 
                         <div className="flex items-center space-x-3">
@@ -973,10 +1059,22 @@ const SalesReports = () => {
                               />
                             </svg>
                           </div>
-                          <div>
+                          {meeting.meetingType === "Client" ? (
+                           <>
+                           <div>
+                            <p className="text-slate-400 text-sm">Last 5 digits</p>
+                            <p className="text-white font-medium">{meeting.phoneLast5}</p>
+                          </div>
+                           </>
+                          ):(
+                           <>
+                           <div>
                             <p className="text-slate-400 text-sm">Phone</p>
                             <p className="text-white font-medium">{meeting.phoneNumber}</p>
                           </div>
+                           </> 
+                          )}
+                          
                         </div>
                       </div>
 
@@ -992,10 +1090,22 @@ const SalesReports = () => {
                               />
                             </svg>
                           </div>
-                          <div>
+                          {meeting.meetingType === "Client" ? (
+                           <>
+                           <div>
+                            <p className="text-slate-400 text-sm">Broker Type</p>
+                            <p className="text-white font-medium break-all">{meeting.brokerType}</p>
+                          </div>
+                           </>
+                          ):(
+                           <>
+                           <div>
                             <p className="text-slate-400 text-sm">Email</p>
                             <p className="text-white font-medium break-all">{meeting.email}</p>
                           </div>
+                           </> 
+                          )}
+                          
                         </div>
                       </div>
                     </div>
@@ -1022,7 +1132,7 @@ const SalesReports = () => {
                       </div>
                     )}
                     
-                    <button className="px-4 py-2 bg-red-600 text-white rounded-md" onClick={() => openFollowUpModal(selectedReport?._id, meeting?._id)}>+ Add Follow Up</button>
+                    {/* <button className="px-4 py-2 bg-red-600 text-white rounded-md" onClick={() => openFollowUpModal(selectedReport?._id, meeting?._id)}>+ Add Follow Up</button> */}
                     
                   </div>
                 ))}
@@ -1413,6 +1523,83 @@ const SalesReports = () => {
                   <h4 className="font-medium mb-3">Meeting {meetingIndex + 1}</h4>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {meeting.meetingType === "Client" ? (
+
+                    <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                      <input
+                        type="text"
+                        value={meeting.clientName}
+                        onChange={(e) => handleEditFormChange(e, meetingIndex, "clientName")}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Last 5 Digit</label>
+                      <input
+                        type="text"
+                        value={meeting.phoneLast5}
+                        onChange={(e) => handleEditFormChange(e, meetingIndex, "phoneLast5")}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Broker Name</label>
+                      <input
+                        type="text"
+                        value={meeting.brokerName}
+                        onChange={(e) => handleEditFormChange(e, meetingIndex, "brokerName")}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Broker Type</label>
+                      <select
+                        value={meeting.brokerType}
+                        onChange={(e) => handleEditFormChange(e, meetingIndex, "brokerType")}
+                        className="w-full px-3 py-2 border rounded-md"
+                      >
+                        <option value="Direct">Direct</option>
+                        <option value="Site">Site</option>
+                        <option value="Reception">Reception</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Client Status</label>
+                      <select
+                        value={meeting.clientStatus}
+                        onChange={(e) => handleEditFormChange(e, meetingIndex, "clientStatus")}
+                        className="w-full px-3 py-2 border rounded-md"
+                      >
+                        <option value="Hot">Hot</option>
+                        <option value="Cold">Cold</option>
+                        <option value="Dead">Dead</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Visiting Card</label>
+                      {meeting.visitingCard && (
+                        <div className="mb-2">
+                          <img
+                            src={`${API_BASE_URL}/${meeting.visitingCard}`}
+                            alt="Current visiting card"
+                            className="h-20 object-contain"
+                          />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        onChange={(e) => handleFileChange(e, meetingIndex)}
+                        className="w-full text-sm"
+                        accept="image/*,.pdf"
+                      />
+                    </div>
+                    
+                    </>  
+                    ):( 
+                    <>  
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Firm Name</label>
                       <input
@@ -1462,6 +1649,8 @@ const SalesReports = () => {
                         accept="image/*,.pdf"
                       />
                     </div>
+                    </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -2044,101 +2233,185 @@ const SalesReports = () => {
                           <div className="border border-gray-200 bg-gradient-to-r from-sky-50 to-blue-50 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
                             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-4 lg:space-y-0">
                               {/* Meeting Details */}
-                              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                              {meeting.meetingType === "Client" ? (
+                              <>
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
                                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    Firm Name
+                                    Client Name
                                   </label>
-                                  <p className="text-sm font-medium text-gray-900 mt-1">{meeting.firmName}</p>
+                                  <p className="text-sm text-gray-900 mt-1">{meeting.clientName}</p>
                                 </div>
                                 <div>
                                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    Owner
+                                    Last 5 Digits
                                   </label>
-                                  <p className="text-sm font-medium text-gray-900 mt-1">{meeting.ownerName}</p>
-                                </div>
-                                <div>
-                                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    Phone
-                                  </label>
-                                  <p className="text-sm text-gray-900 mt-1">
-                                    <a
-                                      href={`tel:${meeting.phoneNumber}`}
-                                      className="hover:text-blue-600 transition-colors"
-                                    >
-                                      {meeting.phoneNumber}
-                                    </a>
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    Email
-                                  </label>
-                                  <p className="text-sm text-gray-900 mt-1">
-                                    {meeting.email ? (
-                                      <a
-                                        href={`mailto:${meeting.email}`}
-                                        className="hover:text-blue-600 transition-colors"
-                                      >
-                                        {meeting.email}
-                                      </a>
+                                
+                                    {meeting.phoneLast5 ? (
+                                      <p  className="hover:text-blue-600 transition-colors">
+                                        {meeting.phoneLast5}
+                                      </p>
                                     ) : (
                                       <span className="text-gray-400">Not provided</span>
                                     )}
-                                  </p>
+                                  
                                 </div>
                                 <div>
                                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    Team Size
+                                    Broker Name
                                   </label>
                                   <p className="text-sm text-gray-900 mt-1">
-                                    {meeting.teamSize || <span className="text-gray-400">Not specified</span>}
+                               
+                                      {meeting.brokerName}
+                                    
                                   </p>
                                 </div>
                                 <div>
                                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    RERA Status
+                                    Broker Type 
                                   </label>
-                                  <p className="text-sm mt-1">
-                                    <span
-                                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                        meeting.rera ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                                      }`}
-                                    >
-                                      {meeting.rera ? "Registered" : "Not Registered"}
-                                    </span>
+                                  <p className="text-sm text-gray-900 mt-1">
+                                      {meeting.brokerType}
+                                   
                                   </p>
                                 </div>
                                 <div>
                                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                    Status
+                                    Location
                                   </label>
-                                  <p className="text-sm mt-1">
-                                    <span
-                                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                        meeting.status === "Interested" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                                      }`}
-                                    >
-                                      {meeting.status}
-                                    </span>
+                                  
+                                    {report.address && (
+                                    <p className="hover:text-blue-600 transition-colors">
+                                      📍 {report.address}
+                                    </p>
+                                    )}
+                                 
+                                </div>
+                                <div>
+                                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                    Client Status 
+                                  </label>
+                                  <p className="text-sm text-gray-900 mt-1">
+                                    
+                                      {meeting.clientStatus}
+                                   
                                   </p>
                                 </div>
-                                {/* {meeting.remark && (
-                                  <div className="md:col-span-2">
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div>
                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                                      Remarks
+                                      Firm Name
                                     </label>
-                                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded border">
-                                      {meeting.remark}
+                                    <p className="text-sm font-medium text-gray-900 mt-1">{meeting.firmName}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      Owner
+                                    </label>
+                                    <p className="text-sm font-medium text-gray-900 mt-1">{meeting.ownerName}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      Phone
+                                    </label>
+                                    <p className="text-sm text-gray-900 mt-1">
+                                      <a
+                                        href={`tel:${meeting.phoneNumber}`}
+                                        className="hover:text-blue-600 transition-colors"
+                                      >
+                                        {meeting.phoneNumber}
+                                      </a>
                                     </p>
                                   </div>
-                                )} */}
-                              </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      Email
+                                    </label>
+                                    <p className="text-sm text-gray-900 mt-1">
+                                      {meeting.email ? (
+                                        <a
+                                          href={`mailto:${meeting.email}`}
+                                          className="hover:text-blue-600 transition-colors"
+                                        >
+                                          {meeting.email}
+                                        </a>
+                                      ) : (
+                                        <span className="text-gray-400">Not provided</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      Team Size
+                                    </label>
+                                    <p className="text-sm text-gray-900 mt-1">
+                                      {meeting.teamSize || <span className="text-gray-400">Not specified</span>}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      RERA Status
+                                    </label>
+                                    <p className="text-sm mt-1">
+                                      <span
+                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                          meeting.rera ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                        }`}
+                                      >
+                                        {meeting.rera ? "Registered" : "Not Registered"}
+                                      </span>
+                                    </p>
+                                  </div>
+                                  <div>
+                                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                    Location
+                                  </label>
+                                  
+                                    {report.address && (
+                                    <p className="hover:text-blue-600 transition-colors">
+                                      📍 {report.address}
+                                    </p>
+                                    )}
+                                 
+                                </div>
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      Status
+                                    </label>
+                                    <p className="text-sm mt-1">
+                                      <span
+                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                          meeting.status === "Interested" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                        }`}
+                                      >
+                                        {meeting.status}
+                                      </span>
+                                    </p>
+                                  </div>
+                                  {/* {meeting.remark && (
+                                    <div className="md:col-span-2">
+                                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                        Remarks
+                                      </label>
+                                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded border">
+                                        {meeting.remark}
+                                      </p>
+                                    </div>
+                                  )} */}
+                                </div>
+                              </>
+
+                              )}
                               {/* Visiting Card */}
                               {meeting.visitingCard && (
                                 <div className="lg:ml-6 flex-shrink-0">
                                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide block mb-2">
-                                    Visiting Card
+                                  {meeting.meetingType === "Client" ? "Client Picture" :  "Visiting Card"}
                                   </label>
                                   <div className="relative group">
                                     <img
