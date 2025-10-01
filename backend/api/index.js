@@ -12,6 +12,7 @@ import authRoutes from './routes/authRoutes.js';
 import salesReportRoutes from './routes/salesReportRoutes.js';
 // import CrmClient from './models/clientModel.js';
 // import SalesReportUser from './models/userModel.js';
+// import CrmSalesReport from './models/salesReportModel.js';
 
 // MongoDB Connection
 mongoose
@@ -60,6 +61,28 @@ const PORT = process.env.PORT || 3007;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}!`);
 });
+
+
+
+
+// const setDefaultMeetingType = async () => {
+//   try {
+
+//     // Update all meetings where meetingType is missing
+//     const result = await CrmSalesReport.updateMany(
+//       { "meetings.meetingType": { $exists: false } },
+//       { $set: { "meetings.$[].meetingType": "Broker" } }
+//     );
+
+//     console.log("Update result:", result);
+//     console.log("✅ All meetings now have meetingType set to Broker");
+//   } catch (err) {
+//     console.error("❌ Error updating meetingType:", err);
+   
+//   }
+// };
+
+// setDefaultMeetingType();
 
 
 

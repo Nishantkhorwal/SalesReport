@@ -20,6 +20,8 @@ const SalesReports = () => {
     date: "",
     meetings: [],
   })
+  const[fromDate, setFromDate] = useState("");
+  const[toDate, setToDate] = useState("");
   const [showFollowUpModal, setShowFollowUpModal] = useState(false)
   const [followUpMeetingId, setFollowUpMeetingId] = useState(null)
   const [followUpSalesReportId, setFollowUpSalesReportId] = useState(null)
@@ -719,6 +721,7 @@ const SalesReports = () => {
       <h2 className="text-xl font-bold mb-4">Export Sales Reports</h2>
       <p className="text-gray-600 mb-4">Choose how you want to export reports:</p>
 
+      {/* Radio Options */}
       <div className="space-y-2">
         <label className="flex items-center space-x-2">
           <input
@@ -747,8 +750,42 @@ const SalesReports = () => {
           />
           <span>Month Wise</span>
         </label>
+        <label className="flex items-center space-x-2">
+          <input
+            type="radio"
+            value="custom"
+            checked={exportType === "custom"}
+            onChange={(e) => setExportType(e.target.value)}
+          />
+          <span>Custom Range</span>
+        </label>
       </div>
 
+      {/* Custom Date Inputs */}
+      {exportType === "custom" && (
+        <div className="mt-4 space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">From Date</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="mt-1 w-full border rounded-lg p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">To Date</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="mt-1 w-full border rounded-lg p-2"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
       <div className="flex justify-end space-x-3 mt-6">
         <button
           onClick={() => setShowExportModal(false)}
@@ -760,15 +797,29 @@ const SalesReports = () => {
           onClick={async () => {
             const today = new Date().toISOString().split("T")[0];
             const token = localStorage.getItem("token");
-            const response = await fetch(
-              `${API_BASE_URL}/api/report/export?type=${exportType}&date=${today}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            let url = "";
+
+            if (exportType === "custom") {
+              if (!fromDate || !toDate) {
+                alert("Please select both From and To dates");
+                return;
+              }
+              url = `${API_BASE_URL}/api/report/export?fromDate=${fromDate}&toDate=${toDate}`;
+            } else {
+              url = `${API_BASE_URL}/api/report/export?type=${exportType}&date=${today}`;
+            }
+
+            const response = await fetch(url, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            const downloadUrl = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = url;
-            a.download = `sales_report_${exportType}_${today}.xlsx`;
+            a.href = downloadUrl;
+            a.download =
+              exportType === "custom"
+                ? `sales_report_${fromDate}_to_${toDate}.xlsx`
+                : `sales_report_${exportType}_${today}.xlsx`;
             a.click();
             a.remove();
             setShowExportModal(false);
@@ -781,6 +832,7 @@ const SalesReports = () => {
     </div>
   </div>
 )}
+
 
 
       {showNotificationModal && (
