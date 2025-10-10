@@ -3,7 +3,6 @@ import { useEffect, useState } from "react"
 import "../App.css"
 import { X } from "lucide-react"
 import DiwaliDecor from "../components/diwali-decor"
-import DiwaliOverlay from "../components/diwali-overlay"
 import ImageModal from "../components/ImageModal"
 
 
