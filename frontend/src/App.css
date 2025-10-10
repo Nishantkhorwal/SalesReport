@@ -58,3 +58,730 @@
 .border-lavender-300 {
   border-color: var(--lavender-300);
 }
+
+
+
+
+
+/* Diwali theme (visual only, no functionality) */
+
+/* Limit to 4 theme colors for accessibility and consistency */
+.diwali-theme {
+  --diwali-bg: #212425; /* charcoal (already used by app) */
+  --diwali-gold: #f5c04f; /* accent gold */
+  --diwali-saffron: #ff7a00; /* festive saffron/orange */
+  --diwali-teal: #0bd3c8; /* cool teal accent */
+
+  position: relative;
+  isolation: isolate; /* ensure overlays stack correctly */
+}
+
+/* Subtle festive background using a pattern image, softened by opacity */
+.diwali-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--diwali-bg);
+  background-image: url("/images/diwali-pattern.jpg");
+  background-size: 480px 480px;
+  background-repeat: repeat;
+  opacity: 0.1; /* very subtle, non-distracting */
+}
+
+/* Festive banner (non-interactive) */
+.diwali-banner {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: rgba(33, 36, 37, 0.7);
+  backdrop-filter: blur(6px);
+  color: var(--diwali-gold);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid rgba(245, 192, 79, 0.25);
+  animation: banner-slide 800ms ease-out both;
+}
+
+.diwali-banner p {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.diwali-banner .spark {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--diwali-saffron);
+  box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.15), 0 0 12px 2px rgba(255, 122, 0, 0.3);
+}
+
+/* Decorative diyas in corners (non-interactive, purely visual) */
+.diwali-theme::before,
+.diwali-theme::after {
+  content: "";
+  position: fixed;
+  z-index: 1;
+  width: 120px;
+  height: 120px;
+  opacity: 0.28;
+  filter: drop-shadow(0 2px 8px rgba(245, 192, 79, 0.25));
+  pointer-events: none;
+}
+.diwali-theme::before {
+  left: 12px;
+  bottom: 12px;
+}
+.diwali-theme::after {
+  right: 12px;
+  bottom: 12px;
+  transform: scaleX(-1);
+}
+
+/* Fireworks overlay (CSS-only burst animations) */
+.diwali-fireworks {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* A single firework is made of dots via box-shadows, animated to burst/fade */
+.firework {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  left: 50%;
+  top: 60%;
+  background: transparent;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: fw-burst 1.8s ease-out infinite;
+  opacity: 1;
+}
+
+/* Different positions and delays for variety */
+.firework.f1 {
+  left: 18%;
+  top: 32%;
+  animation-delay: 0.1s;
+}
+.firework.f2 {
+  left: 42%;
+  top: 24%;
+  animation-delay: 0.35s;
+}
+.firework.f3 {
+  left: 68%;
+  top: 38%;
+  animation-delay: 0.55s;
+}
+.firework.f4 {
+  left: 78%;
+  top: 18%;
+  animation-delay: 0.85s;
+}
+.firework.f5 {
+  left: 28%;
+  top: 18%;
+  animation-delay: 1.1s;
+}
+.firework.f6 {
+  left: 56%;
+  top: 12%;
+  animation-delay: 1.35s;
+}
+
+/* Use multiple colored "particles" via box-shadows radiating outwards */
+.firework::before,
+.firework::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* gold particles */
+  box-shadow:
+    0 -24px 0 0 var(--diwali-gold),
+    0 24px 0 0 var(--diwali-gold),
+    24px 0 0 0 var(--diwali-gold),
+    -24px 0 0 0 var(--diwali-gold),
+    17px -17px 0 0 var(--diwali-gold),
+    -17px -17px 0 0 var(--diwali-gold),
+    17px 17px 0 0 var(--diwali-gold),
+    -17px 17px 0 0 var(--diwali-gold),
+    /* saffron particles */
+    0 -40px 0 0 var(--diwali-saffron),
+    0 40px 0 0 var(--diwali-saffron),
+    40px 0 0 0 var(--diwali-saffron),
+    -40px 0 0 0 var(--diwali-saffron),
+    28px -28px 0 0 var(--diwali-saffron),
+    -28px -28px 0 0 var(--diwali-saffron),
+    28px 28px 0 0 var(--diwali-saffron),
+    -28px 28px 0 0 var(--diwali-saffron),
+    /* teal sparks */
+    0 -56px 0 0 var(--diwali-teal),
+    0 56px 0 0 var(--diwali-teal),
+    56px 0 0 0 var(--diwali-teal),
+    -56px 0 0 0 var(--diwali-teal),
+    40px -40px 0 0 var(--diwali-teal),
+    -40px -40px 0 0 var(--diwali-teal),
+    40px 40px 0 0 var(--diwali-teal),
+    -40px 40px 0 0 var(--diwali-teal);
+  animation: fw-fade 1.8s ease-out infinite;
+}
+
+.firework::after {
+  transform: rotate(22.5deg); /* offset the second layer for denser burst */
+}
+
+/* Animations */
+@keyframes fw-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0;
+  }
+}
+
+@keyframes fw-fade {
+  0% {
+    opacity: 0;
+    filter: blur(0);
+  }
+  20% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  70% {
+    opacity: 1;
+    filter: blur(0.2px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+@keyframes banner-slide {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Respect user reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .firework,
+  .firework::before,
+  .firework::after {
+    animation: none !important;
+  }
+  .diwali-banner {
+    animation: none !important;
+  }
+}
+
+
+
+
+
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+/* Diwali palette: override core tokens at the end (keeps structure, just re-themes) */
+:root {
+  --background: #fff8e7; /* ivory */
+  --foreground: #2b1b0e; /* deep espresso */
+  --primary: #ff6b00; /* saffron/orange */
+  --primary-foreground: #fff6e5; /* warm light for contrast */
+  --accent: #ffc107; /* festive marigold/gold */
+  --accent-foreground: #2b1b0e;
+  --secondary: #ffe7a3; /* soft golden neutral */
+  --secondary-foreground: #2b1b0e;
+  --border: #f5e7c9;
+  --ring: #ffb300; /* golden ring focus */
+  --card: #fffcf2;
+  --card-foreground: #2b1b0e;
+  --muted: #fff1d6;
+  --muted-foreground: #6e533c;
+  --sidebar: #fffcf2;
+  --sidebar-foreground: #2b1b0e;
+  --sidebar-primary: #ff6b00;
+  --sidebar-primary-foreground: #fff6e5;
+  --sidebar-accent: #ffe7a3;
+  --sidebar-accent-foreground: #2b1b0e;
+  --sidebar-border: #f5e7c9;
+  --sidebar-ring: #ffb300;
+}
+
+.dark {
+  --background: #0e0b07; /* warm near-black */
+  --foreground: #ffefc7; /* soft gold text */
+  --card: #1a140f;
+  --card-foreground: #ffefc7;
+  --popover: #1a140f;
+  --popover-foreground: #ffefc7;
+  --primary: #ff8a00; /* brighter saffron on dark */
+  --primary-foreground: #1a140f;
+  --secondary: #3a2a1d;
+  --secondary-foreground: #ffefc7;
+  --muted: #2b1e15;
+  --muted-foreground: #d8c7a2;
+  --accent: #ffd54f; /* gold accent on dark */
+  --accent-foreground: #1a140f;
+  --border: #2b1e15;
+  --input: #2b1e15;
+  --ring: #ffb300;
+  --sidebar: #1a140f;
+  --sidebar-foreground: #ffefc7;
+  --sidebar-primary: #ff8a00;
+  --sidebar-primary-foreground: #1a140f;
+  --sidebar-accent: #3a2a1d;
+  --sidebar-accent-foreground: #ffefc7;
+  --sidebar-border: #2b1e15;
+  --sidebar-ring: #ffb300;
+}
+
+
+
+
+/* Diwali décor: fireworks overlay + garlands + subtle bokeh */
+.diwali-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(1200px 600px at 50% -20%, rgba(0, 0, 0, 0.2), transparent 70%), var(--color-background);
+  display: grid;
+  place-items: center;
+  transition: opacity 500ms ease, visibility 500ms ease;
+}
+.diwali-overlay--fade {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.diwali-fireworks {
+  position: absolute;
+  inset: 0;
+}
+.diwali-message {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--color-card), transparent 30%);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 4px color-mix(in oklch, var(--color-accent), transparent 92%);
+  animation: diwali-message-in 900ms ease forwards 1200ms;
+  opacity: 0;
+}
+@keyframes diwali-message-in {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+.diwali-title {
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-wrap: balance;
+}
+.diwali-subtitle {
+  margin-top: 0.375rem;
+  color: var(--color-foreground);
+  opacity: 0.9;
+  font-size: clamp(0.95rem, 1.5vw, 1.05rem);
+}
+
+/* Garlands (top & bottom) */
+.diwali-decor {
+  pointer-events: none;
+}
+.garland {
+  position: fixed;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  z-index: 40;
+}
+.garland-top {
+  top: 0;
+}
+.garland-bottom {
+  bottom: 0;
+}
+.bulb {
+  width: 10px;
+  height: 10px;
+  justify-self: center;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-primary), transparent 70%), 0 0 14px 2px
+    color-mix(in oklch, var(--color-primary), transparent 40%);
+  animation: bulb-flicker 1.2s infinite ease-in-out;
+}
+.bulb:nth-child(3n) {
+  background: var(--color-accent);
+}
+.bulb:nth-child(3n) {
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-accent), transparent 70%), 0 0 14px 2px
+    color-mix(in oklch, var(--color-accent), transparent 40%);
+}
+@keyframes bulb-flicker {
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: translateY(0);
+  }
+  50% {
+    filter: brightness(1.35);
+    transform: translateY(1px);
+  }
+}
+
+/* Subtle background bokeh */
+.diwali-bokeh {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: radial-gradient(
+      120px 120px at 20% 25%,
+      color-mix(in oklch, var(--color-accent), transparent 88%),
+      transparent 60%
+    ),
+    radial-gradient(140px 140px at 80% 30%, color-mix(in oklch, var(--color-primary), transparent 90%), transparent 60%),
+    radial-gradient(100px 100px at 40% 75%, color-mix(in oklch, var(--color-accent), transparent 92%), transparent 60%);
+  opacity: 0.35;
+  animation: bokeh-float 12s ease-in-out infinite alternate;
+}
+@keyframes bokeh-float {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (max-width: 640px) {
+  .garland {
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+  }
+  .bulb {
+    width: 8px;
+    height: 8px;
+  }
+  .diwali-message {
+    padding: 1rem 1.25rem;
+  }
+}
+
+
+
+
+
+/* Diwali theme token overrides and festive decorations without changing app structure */
+
+/* Warm, festive palette overrides (loaded after globals to take precedence) */
+:root {
+  --background: #fff8e7; /* ivory */
+  --foreground: #2b1b0e; /* deep espresso */
+  --primary: #ff6b00; /* saffron/orange */
+  --primary-foreground: #fff6e5; /* warm light */
+  --accent: #ffc107; /* gold/marigold */
+  --accent-foreground: #2b1b0e;
+  --secondary: #ffe7a3; /* soft golden neutral */
+  --secondary-foreground: #2b1b0e;
+  --border: #f5e7c9;
+  --ring: #ffb300; /* golden ring focus */
+  --card: #fffcf2;
+  --card-foreground: #2b1b0e;
+  --muted: #fff1d6;
+  --muted-foreground: #6e533c;
+  --sidebar: #fffcf2;
+  --sidebar-foreground: #2b1b0e;
+  --sidebar-primary: #ff6b00;
+  --sidebar-primary-foreground: #fff6e5;
+  --sidebar-accent: #ffe7a3;
+  --sidebar-accent-foreground: #2b1b0e;
+  --sidebar-border: #f5e7c9;
+  --sidebar-ring: #ffb300;
+}
+
+.dark {
+  --background: #0e0b07; /* warm near-black */
+  --foreground: #ffefc7; /* soft gold text */
+  --card: #1a140f;
+  --card-foreground: #ffefc7;
+  --popover: #1a140f;
+  --popover-foreground: #ffefc7;
+  --primary: #ff8a00; /* brighter saffron on dark */
+  --primary-foreground: #1a140f;
+  --secondary: #3a2a1d;
+  --secondary-foreground: #ffefc7;
+  --muted: #2b1e15;
+  --muted-foreground: #d8c7a2;
+  --accent: #ffd54f; /* gold accent on dark */
+  --accent-foreground: #1a140f;
+  --border: #2b1e15;
+  --input: #2b1e15;
+  --ring: #ffb300;
+  --sidebar: #1a140f;
+  --sidebar-foreground: #ffefc7;
+  --sidebar-primary: #ff8a00;
+  --sidebar-primary-foreground: #1a140f;
+  --sidebar-accent: #3a2a1d;
+  --sidebar-accent-foreground: #ffefc7;
+  --sidebar-border: #2b1e15;
+  --sidebar-ring: #ffb300;
+}
+
+/* One-time fireworks overlay + professional greeting */
+.diwali-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(1200px 600px at 50% -20%, rgba(0, 0, 0, 0.2), transparent 70%),
+    var(--color-background, var(--background));
+  display: grid;
+  place-items: center;
+  transition: opacity 500ms ease, visibility 500ms ease;
+}
+.diwali-overlay--fade {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.diwali-fireworks {
+  position: absolute;
+  inset: 0;
+}
+.diwali-message {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1.5rem 2rem;
+  border-radius: 0.75rem;
+  background: color-mix(in oklch, var(--card, #fffcf2), transparent 30%);
+  border: 1px solid var(--border, #f5e7c9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 4px color-mix(in oklch, var(--accent, #ffc107), transparent 92%);
+  animation: diwali-message-in 900ms ease forwards 1200ms;
+  opacity: 0;
+}
+@keyframes diwali-message-in {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+.diwali-title {
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--primary, #ff6b00);
+  text-wrap: balance;
+}
+.diwali-subtitle {
+  margin-top: 0.375rem;
+  color: var(--foreground, #2b1b0e);
+  opacity: 0.9;
+  font-size: clamp(0.95rem, 1.5vw, 1.05rem);
+}
+
+/* Decorative garlands (top & bottom) */
+.diwali-decor {
+  pointer-events: none;
+}
+.garland {
+  position: fixed;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  z-index: 40;
+}
+.garland-top {
+  top: 0;
+}
+.garland-bottom {
+  bottom: 0;
+}
+.bulb {
+  width: 10px;
+  height: 10px;
+  justify-self: center;
+  border-radius: 9999px;
+  background: var(--primary, #ff6b00);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary, #ff6b00), transparent 70%), 0 0 14px 2px
+    color-mix(in oklch, var(--primary, #ff6b00), transparent 40%);
+  animation: bulb-flicker 1.2s infinite ease-in-out;
+}
+.bulb:nth-child(3n) {
+  background: var(--accent, #ffc107);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent, #ffc107), transparent 70%), 0 0 14px 2px
+    color-mix(in oklch, var(--accent, #ffc107), transparent 40%);
+}
+@keyframes bulb-flicker {
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: translateY(0);
+  }
+  50% {
+    filter: brightness(1.35);
+    transform: translateY(1px);
+  }
+}
+
+/* Subtle background bokeh */
+.diwali-bokeh {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: radial-gradient(
+      120px 120px at 20% 25%,
+      color-mix(in oklch, var(--accent, #ffc107), transparent 88%),
+      transparent 60%
+    ),
+    radial-gradient(
+      140px 140px at 80% 30%,
+      color-mix(in oklch, var(--primary, #ff6b00), transparent 90%),
+      transparent 60%
+    ),
+    radial-gradient(
+      100px 100px at 40% 75%,
+      color-mix(in oklch, var(--accent, #ffc107), transparent 92%),
+      transparent 60%
+    );
+  opacity: 0.35;
+  animation: bokeh-float 12s ease-in-out infinite alternate;
+}
+@keyframes bokeh-float {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (max-width: 640px) {
+  .garland {
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+  }
+  .bulb {
+    width: 8px;
+    height: 8px;
+  }
+  .diwali-message {
+    padding: 1rem 1.25rem;
+  }
+}
