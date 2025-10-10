@@ -1,5 +1,4 @@
 /* Decorative festive lights and subtle background bokeh (responsive, no TypeScript) */
-"use client"
 
 export default function DiwaliDecor() {
   return (
