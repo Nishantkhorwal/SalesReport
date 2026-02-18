@@ -88,6 +88,10 @@ const ClientRegistrationForm = () => {
     alert("Please select a Channel Partner from the dropdown.");
     return;
   }
+   if (!form.rmName.trim()) {
+    alert("RM Name is required.");
+    return;
+  }
 
   setIsSubmitting(true);
 

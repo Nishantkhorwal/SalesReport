@@ -25,7 +25,6 @@ const channelPartnerSchema = new mongoose.Schema(
     },
     rmName: {                   
       type: String,
-      required: true,
       default: "",              
       trim: true,
     },
