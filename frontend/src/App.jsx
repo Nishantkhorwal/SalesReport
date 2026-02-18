@@ -13,6 +13,8 @@ import SalesReportForm from './pages/SalesReportForm';
 import SalesReports from './pages/SalesReports';
 import EditUsers from './pages/EditUsers';
 import ProfilePage from './pages/Profile';
+import ClientRegistrationForm from './pages/ClientRegistrationForm';
+import RegisteredClientsTable from './pages/RegisteredClientsTable';
 
 
 function App() {
@@ -34,6 +36,12 @@ function App() {
             </DashboardLayout>} /> */}
             <Route path="/createreport" element={<DashboardLayout>
               <SalesReportForm />
+            </DashboardLayout>} />
+            <Route path="/getregistration" element={<DashboardLayout>
+              <RegisteredClientsTable />
+            </DashboardLayout>} />
+            <Route path="/createregistration" element={<DashboardLayout>
+              <ClientRegistrationForm />
             </DashboardLayout>} />
             <Route path="/profile" element={<DashboardLayout>
               <ProfilePage />

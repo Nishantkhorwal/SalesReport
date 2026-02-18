@@ -10,6 +10,7 @@ import path from 'path';
 
 import authRoutes from './routes/authRoutes.js';
 import salesReportRoutes from './routes/salesReportRoutes.js';
+import registrationRoutes from './routes/registrationRoutes.js';
 // import CrmClient from './models/clientModel.js';
 // import SalesReportUser from './models/userModel.js';
 // import CrmSalesReport from './models/salesReportModel.js';
@@ -54,6 +55,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/report', salesReportRoutes);
+app.use('/api/register', registrationRoutes);
 
 
 // Start Server

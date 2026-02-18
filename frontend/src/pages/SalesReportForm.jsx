@@ -307,7 +307,7 @@ const SalesReportForm = () => {
     //   </div>
     // </div>
 
-    <div className="min-h-screen bg-[#212425] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0b1220] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="bg-gray-100 rounded-lg shadow-sm border border-slate-200 overflow-hidden">
           <div className="border-b border-slate-200 bg-gray-100 px-6 py-5">
