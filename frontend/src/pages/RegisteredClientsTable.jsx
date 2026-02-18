@@ -725,7 +725,7 @@ const fetchClientReportData = async (pageNumber = 1) => {
                     </button>
 
                     {openMenu === item._id && (
-                      <div className="fixed right-4 mt-2 bg-[#0b1220] border border-white/10 rounded-md shadow-xl z-50 min-w-[140px]">
+                      <div className="absolute right-0 top-full mt-2 bg-[#0b1220] border border-white/10 rounded-md shadow-xl z-50 min-w-[140px]">
                         <button
                           onClick={() => {
                             openEdit(item)
