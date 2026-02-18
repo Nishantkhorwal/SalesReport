@@ -196,7 +196,7 @@ export default function Sidebar() {
           <div className="flex-1" />
 
           {/* Logout */}
-          <button onClick={handleLogout} className="group mb-8 ">
+          <button onClick={handleLogout} className="group mb-16 lg:mb-8 ">
             <div
               className={`
                 flex items-center rounded-xl
