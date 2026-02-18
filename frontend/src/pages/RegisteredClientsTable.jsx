@@ -371,55 +371,57 @@ const fetchClientReportData = async (pageNumber = 1) => {
                 gap-3 md:gap-4 items-end">
 
   {/* Search */}
-  <div className="relative w-full">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+  <div className="relative w-full min-w-0">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
     <input
       type="text"
       placeholder="Search.."
       value={search}
       onChange={(e) => setSearch(e.target.value)}
-      className="w-full h-10 pl-9 pr-3 
+      className="w-full h-10 min-w-0 pl-9 pr-3 
                  bg-[#0b1220] border border-white/10 
                  rounded-md text-sm focus:outline-none"
     />
   </div>
 
   {/* From Date */}
-  <div className="relative w-full">
-    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+  <div className="relative w-full min-w-0">
+    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
     <input
       type="date"
       value={fromDate}
       onChange={(e) => setFromDate(e.target.value)}
-      className="w-full h-10 pl-9 pr-3 
+      className="w-full h-10 min-w-0 pl-9 pr-3
                  bg-[#0b1220] border border-white/10 
-                 rounded-md text-sm"
+                 rounded-md text-sm
+                 appearance-none"
     />
   </div>
 
   {/* To Date */}
-  <div className="relative w-full">
-    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+  <div className="relative w-full min-w-0">
+    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
     <input
       type="date"
       value={toDate}
       onChange={(e) => setToDate(e.target.value)}
-      className="w-full h-10 pl-9 pr-3 
+      className="w-full h-10 min-w-0 pl-9 pr-3
                  bg-[#0b1220] border border-white/10 
-                 rounded-md text-sm"
+                 rounded-md text-sm
+                 appearance-none"
     />
   </div>
 
-  {/* Empty div to maintain layout balance on md */}
-  <div className="hidden md:block"></div>
+  {/* Spacer for md layout */}
+  <div className="hidden md:block min-w-0"></div>
 
-  {/* Apply */}
+  {/* Apply Button */}
   <button
     onClick={applyFilters}
-    className="w-full h-10 
-               flex items-center justify-center gap-2 
-               bg-indigo-600 hover:bg-indigo-500 
-               rounded-md text-sm font-medium 
+    className="w-full h-10 min-w-0
+               flex items-center justify-center gap-2
+               bg-indigo-600 hover:bg-indigo-500
+               rounded-md text-sm font-medium
                transition-colors duration-200"
   >
     <Filter className="h-4 w-4" />
