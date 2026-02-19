@@ -70,70 +70,33 @@ export const registerClient = async (req, res) => {
 
     let partnerId = null;
 
-    // ====================================================
-    // CASE 1️⃣ Existing Channel Partner (ID Provided)
-    // ====================================================
-    if (channelPartnerId) {
-  const partnerExists = await ChannelPartner.findById(channelPartnerId);
+if (channelPartnerId) {
+  const partner = await ChannelPartner.findById(channelPartnerId);
 
-  if (partnerExists) {
-    partnerId = partnerExists._id;
-  } else {
-    // 🔥 This means it came from CrmSalesReport (no _id in ChannelPartner)
-    const reportPartner = await CrmSalesReport.findOne({
-      meetings: {
-        $elemMatch: {
-          meetingType: "Broker",
-          firmName: channelPartnerName,
-        },
-      },
+  if (!partner) {
+    return res.status(404).json({
+      success: false,
+      message: "Channel Partner not found",
     });
-
-    if (!reportPartner) {
-      return res.status(404).json({
-        success: false,
-        message: "Partner not found",
-      });
-    }
-
-    const meetingData = reportPartner.meetings.find(
-      (m) =>
-        m.meetingType === "Broker" &&
-        m.firmName.trim().toLowerCase() ===
-          channelPartnerName.trim().toLowerCase()
-    );
-
-    // 🔥 AUTO CREATE HERE (NO MODAL)
-    const newPartner = await ChannelPartner.create({
-      name: meetingData.firmName.trim(),
-      ownerName: meetingData.ownerName || "",
-      phoneNumber: meetingData.phoneNumber || "",
-      email: meetingData.email || "",
-    });
-
-    partnerId = newPartner._id;
   }
-}
 
+  partnerId = partner._id;
 
-    // ====================================================
-    // CASE 2️⃣ New Channel Partner Creation
-    // ====================================================
-    // ====================================================
-// CASE 2️⃣ Channel Partner Name Provided
-// ====================================================
-else if (channelPartnerName) {
+} else if (channelPartnerName) {
+
   const normalizedName = channelPartnerName.trim();
 
-  // 1️⃣ Check if exists in ChannelPartner
+  // 1️⃣ Check DB first
   let existingPartner = await ChannelPartner.findOne({
     name: { $regex: new RegExp(`^${normalizedName}$`, "i") },
   });
 
   if (existingPartner) {
     partnerId = existingPartner._id;
+
   } else {
-    // 2️⃣ Check if exists in CrmSalesReport
+
+    // 2️⃣ Check CrmSalesReport EXACT MATCH
     const report = await CrmSalesReport.findOne({
       meetings: {
         $elemMatch: {
@@ -145,12 +108,18 @@ else if (channelPartnerName) {
 
     if (report) {
       const meetingData = report.meetings.find(
-        (m) =>
+        m =>
           m.meetingType === "Broker" &&
           m.firmName.trim().toLowerCase() === normalizedName.toLowerCase()
       );
 
-      // 🔥 AUTO CREATE using report data
+      if (!meetingData) {
+        return res.status(400).json({
+          success: false,
+          message: "Partner data mismatch",
+        });
+      }
+
       const newPartner = await ChannelPartner.create({
         name: meetingData.firmName.trim(),
         ownerName: meetingData.ownerName || "",
@@ -159,8 +128,10 @@ else if (channelPartnerName) {
       });
 
       partnerId = newPartner._id;
+
     } else {
-      // 3️⃣ Completely new partner (manual creation)
+
+      // 3️⃣ Manual creation ONLY here
       if (!ownerName || !phoneNumber || !email) {
         return res.status(400).json({
           success: false,
@@ -179,19 +150,14 @@ else if (channelPartnerName) {
       partnerId = newPartner._id;
     }
   }
+
+} else {
+  return res.status(400).json({
+    success: false,
+    message: "Channel Partner selection is required",
+  });
 }
 
-
-
-    // ====================================================
-    // CASE 3️⃣ Nothing Provided
-    // ====================================================
-    else {
-      return res.status(400).json({
-        success: false,
-        message: "Channel Partner selection is required",
-      });
-    }
 
     // ====================================================
     // CREATE CLIENT (FINAL STEP)
