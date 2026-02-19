@@ -58,7 +58,11 @@ const ClientRegistrationForm = () => {
   formData.append("phoneNumber", form.phoneNumber);
   formData.append("email", form.email);
   formData.append("rmName", form.rmName);
+  
 
+  if (selectedPartner) {
+  formData.append("source", selectedPartner.source);
+}
   if (selectedPartner?._id) {
     formData.append("channelPartnerId", selectedPartner._id);
   }
@@ -352,9 +356,7 @@ const fetchClientSuggestions = async (query) => {
                     fetchChannelPartners(value);
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowSuggestions(false), 150)
-                  }
+                  
                   required
                   className="w-full pl-10 pr-3 py-2 border rounded-md"
                 />
@@ -367,23 +369,23 @@ const fetchClientSuggestions = async (query) => {
                   {channelPartners.map((cp, index) => (
                     <div
                       key={cp._id || index}
-                      onMouseDown={() => {
-                      handleChange("channelPartnerName", cp.name);
-                      setSelectedPartner(cp);
-                      setShowSuggestions(false);
+                      onMouseDown={(e) => {
+  e.preventDefault(); // 🔥 THIS IS IMPORTANT
 
-                      if (!cp.rmName) {
-                        // Existing partner but missing RM
-                        setModalType("rmOnly");
-                        setShowModal(true);
-                        setIsValidSelection(false);
-                      } else {
-                        // Existing partner with RM
-                        handleChange("rmName", cp.rmName);
-                        setIsValidSelection(true);
-                        setShowModal(false);
-                      }
-                      }}
+  handleChange("channelPartnerName", cp.name);
+  setSelectedPartner(cp);
+  setShowSuggestions(false);
+
+  if (!cp.rmName) {
+    setModalType("rmOnly");
+    setShowModal(true);
+    setIsValidSelection(false);
+  } else {
+    handleChange("rmName", cp.rmName);
+    setIsValidSelection(true);
+  }
+}}
+
 
                       className="px-4 py-2 hover:bg-slate-100 cursor-pointer"
                     >
